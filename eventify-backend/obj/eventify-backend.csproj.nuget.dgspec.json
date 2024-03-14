@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj": {}
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj": {
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj",
+        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj",
         "projectName": "eventify-backend",
-        "projectPath": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj",
+        "projectPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj",
         "packagesPath": "C:\\Users\\manoj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\obj\\",
+        "outputPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\manoj\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -39,6 +39,22 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
