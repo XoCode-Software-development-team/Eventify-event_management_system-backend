@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj": {}
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj": {
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj",
+        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj",
         "projectName": "eventify-backend",
-        "projectPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj",
+        "projectPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj",
         "packagesPath": "C:\\Users\\manoj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\obj\\",
+        "outputPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\manoj\\AppData\\Roaming\\NuGet\\NuGet.Config",

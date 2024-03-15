@@ -216,22 +216,23 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/Api/vendorService/{categoryId}")]
+        [HttpGet("/Api/vendorService/{categoryId}/{vendorId}")]
 
-        public async Task<IActionResult> GetVendorServiceByCategory([FromRoute] int categoryId)
+        public async Task<IActionResult> GetVendorServiceByCategory([FromRoute] int categoryId, Guid vendorId)
         {
 
             var serviceCategory = _appDbContext.ServiceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
 
-            if (serviceCategory == null)
+            var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
+
+            if (serviceCategory == null || vendor == null)
             {
                 return NotFound();
             }
 
 
             var servicesWithCategories = await _appDbContext.services
-                .Include(s => s.ServiceCategory)
-                .Where(s => s.ServiceCategoryId == categoryId)
+                .Where(s => s.ServiceCategoryId == categoryId && s.VendorId == vendorId)
                 .Select(s => new
                 {
                     SoRId = s.SoRId,
@@ -242,6 +243,75 @@ namespace eventify_backend.Controllers
                 .ToListAsync();
 
             return Ok(servicesWithCategories);
+        }
+
+        [HttpGet("/Api/bookedService/Categories/{Id}")]
+        public async Task<IActionResult> GetServiceCategoriesOfBookedServices(Guid Id)
+        {
+            try
+            {
+                var currentDate = DateTime.Now;
+
+                var categories = await _appDbContext.ServiceCategories
+                    .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSRs != null &&
+                        s.EventSRs.Any(esr => esr.Event != null && esr.ServiceAndResource != null &&
+                            esr.Event.EndDateTime > currentDate && esr.ServiceAndResource.VendorId == Id)))
+                    .Select(x => new {x.CategoryId, x.ServiceCategoryName})
+                    .ToListAsync();
+
+
+                return Ok(categories);
+
+
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/Api/bookedService/{categoryId}/{vendorId}")]
+        public async Task<IActionResult> GetBookedServicesOfVendor(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                var serviceCategory = _appDbContext.ServiceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
+
+                var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
+
+                if (serviceCategory == null || vendor == null)
+                {
+                    return NotFound();
+                }
+
+                var currentDate = DateTime.Now;
+
+                var services = await _appDbContext.services
+                    .Where(s => s.ServiceCategoryId == categoryId &&
+                                s.VendorId == vendorId &&
+                                s.EventSRs != null &&
+                                s.EventSRs.Any(e => e.Event != null && e.Event.EndDateTime > currentDate))
+                    .Select(x => new
+                    {
+                        soRid = x.SoRId,
+                        service = x.Name,
+                        eventDate = x.EventSRs != null ? x.EventSRs.Select(e => e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null,
+                        endDate = x.EventSRs != null ? x.EventSRs.Select(e => e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null
+                    })
+                    .ToListAsync();
+
+
+
+                return Ok(services);
+
+
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }

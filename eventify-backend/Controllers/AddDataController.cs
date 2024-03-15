@@ -78,5 +78,38 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"An error occurred while adding the client: {ex.Message}");
             }
         }
+
+        // POST: api/Events
+        [HttpPost("Event")]
+        public async Task<ActionResult> PostEvent(Event eventData)
+        {
+            try
+            {
+                _appDbContext.Events.Add(eventData);
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok(eventData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex}");
+            }
+        }
+
+        [HttpPost("EventSR")]
+        public async Task<ActionResult> PostEventSR(EventSR eventData)
+        {
+            try
+            {
+                _appDbContext.EventSr.Add(eventData);
+                await _appDbContext.SaveChangesAsync();
+
+                return Ok(eventData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex}");
+            }
+        }
     }
 }

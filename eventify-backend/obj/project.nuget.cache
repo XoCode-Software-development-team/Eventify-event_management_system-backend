@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "qnqe62XgXJQ/CkLO+tE7uuAKJ355sGDpxkitpemggyR27OdEk8ZlySRFPPKOuVQo08qf3/Huy7aF7QIxP4k6/g==",
+  "dgSpecHash": "dYHQk8zGFoEQeu9U1MbH4X1EMNPg5oNUSVfnpo+SxaFjUIXUlDB+YbDzfsjIeJK1+6yamoy3F9c8UxCa6ngdPQ==",
   "success": true,
-  "projectFilePath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system\\eventify-backend\\eventify-backend\\eventify-backend.csproj",
+  "projectFilePath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\manoj\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\manoj\\.nuget\\packages\\microsoft.entityframeworkcore\\7.0.2\\microsoft.entityframeworkcore.7.0.2.nupkg.sha512",
