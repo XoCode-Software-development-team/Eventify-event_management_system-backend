@@ -256,7 +256,7 @@ namespace eventify_backend.Controllers
                     .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSRs != null &&
                         s.EventSRs.Any(esr => esr.Event != null && esr.ServiceAndResource != null &&
                             esr.Event.EndDateTime > currentDate && esr.ServiceAndResource.VendorId == Id)))
-                    .Select(x => new {x.CategoryId, x.ServiceCategoryName})
+                    .Select(x => new { x.CategoryId, x.ServiceCategoryName })
                     .ToListAsync();
 
 
@@ -313,5 +313,96 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
+        [HttpGet("/Api/bookingRequest/{vendorId}")]
+
+        public async Task<IActionResult> GetCategoriesOfBookingRequest(Guid vendorId)
+        {
+            try
+            {
+                var categories = await _appDbContext.ServiceCategories
+                    .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSoRApproves != null && s.VendorId == vendorId && s.EventSoRApproves
+                    .Any(esra =>esra.IsApproved == false)))
+                    .Select(x => new { x.CategoryId, x.ServiceCategoryName })
+                    .ToListAsync();
+
+
+                return Ok(categories);
+
+
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/Api/bookingRequest/{categoryId}/{vendorId}")]
+        public async Task<IActionResult> GetServicesOfBookingRequest(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                var serviceCategory = _appDbContext.ServiceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
+
+                var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
+
+                if (serviceCategory == null || vendor == null)
+                {
+                    return NotFound();
+                }
+
+                var services = await _appDbContext.services
+                    .Where(s => s.ServiceCategoryId == categoryId &&
+                                s.VendorId == vendorId &&
+                                s.EventSoRApproves != null &&
+                                s.EventSoRApproves.Any(e => e.IsApproved == false))
+                    .Select(x => new
+                    {
+                        soRId = x.SoRId,
+                        eventId = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.EventId): null,
+                        service = x.Name,
+                        eventName = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event !=null ? e.Event.Name : null) : null,
+                        eventDate = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null,
+                        endDate = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null
+                    })
+                    .ToListAsync();
+
+
+
+                return Ok(services);
+
+
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/Api/bookingRequestApprove/{eventId}/{soRId}")]
+        public async Task<IActionResult> BookServiceByVendor([FromRoute] int eventId,int soRId)
+        {
+            var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
+            if (eventSorToApprove == null)
+            {
+                return NotFound();
+            }
+
+            var EventSR = new EventSR
+            {
+                Id = eventId,
+                SORId = soRId,
+            };
+
+            await _appDbContext.EventSr.AddAsync(EventSR);
+            _appDbContext.EventSoRApproves.Remove(eventSorToApprove);
+            await _appDbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
     }
 }

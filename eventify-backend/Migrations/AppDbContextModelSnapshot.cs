@@ -96,7 +96,7 @@ namespace eventifybackend.Migrations
 
                     b.HasIndex("SoRId");
 
-                    b.ToTable("EventSoRApprove");
+                    b.ToTable("EventSoRApproves");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.FeatureAndFacility", b =>
@@ -470,7 +470,7 @@ namespace eventifybackend.Migrations
                         .HasForeignKey("ReviewAndRatingId");
 
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
-                        .WithMany()
+                        .WithMany("EventSoRApproves")
                         .HasForeignKey("SoRId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -654,6 +654,8 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.ServiceAndResource", b =>
                 {
                     b.Navigation("EventSRs");
+
+                    b.Navigation("EventSoRApproves");
 
                     b.Navigation("FeaturesAndFacilities");
 

@@ -40,6 +40,8 @@ namespace eventify_backend.Data
 
         public DbSet<Rating> Rating { get; set; }
 
+        public DbSet<EventSoRApprove> EventSoRApproves { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FeatureAndFacility>()

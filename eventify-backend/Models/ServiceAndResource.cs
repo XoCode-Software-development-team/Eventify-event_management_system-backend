@@ -34,5 +34,6 @@ namespace eventify_backend.Models
         public ICollection<ReviewAndRating>? ReviewAndRating { get; set; }
 
         public Vendor? Vendor { get; set; }
+        public ICollection<EventSoRApprove>? EventSoRApproves { get; set; }
     }
 }
