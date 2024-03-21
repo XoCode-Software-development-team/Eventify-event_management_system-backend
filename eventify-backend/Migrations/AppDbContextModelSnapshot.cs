@@ -81,7 +81,7 @@ namespace eventifybackend.Migrations
                     b.Property<int>("SoRId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsApproved")
+                    b.Property<bool>("IsRequest")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<int?>("ReviewAndRatingId")

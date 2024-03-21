@@ -21,7 +21,7 @@ namespace eventify_backend.Controllers
 
 
 
-        [HttpGet("/Api/[Controller]/Categories")]
+        [HttpGet("/api/[Controller]/categories")]
         public async Task<IActionResult> GetAllServiceCategories()
         {
             var categories = await _appDbContext.ServiceCategories
@@ -35,7 +35,7 @@ namespace eventify_backend.Controllers
             return Ok(categories);
         }
 
-        [HttpGet("/Api/[Controller]/{categoryId}")]
+        [HttpGet("/api/[Controller]/{categoryId}")]
 
         public async Task<IActionResult> GetServiceByCategory([FromRoute] int categoryId)
         {
@@ -63,7 +63,7 @@ namespace eventify_backend.Controllers
             return Ok(servicesWithCategories);
         }
 
-        [HttpPut("/Api/[Controller]/{SoRId}")]
+        [HttpPut("/api/[Controller]/{SoRId}")]
         public async Task<IActionResult> ChangeSuspendState([FromRoute] int SORId)
         {
             var service = await _appDbContext.ServiceAndResources.FindAsync(SORId);
@@ -86,7 +86,7 @@ namespace eventify_backend.Controllers
 
         }
 
-        [HttpDelete("/Api/[Controller]/{Id}")]
+        [HttpDelete("/api/[Controller]/{Id}")]
         public async Task<IActionResult> DeleteService([FromRoute] int Id)
         {
             var service = await _appDbContext.services.FindAsync(Id);
@@ -104,7 +104,7 @@ namespace eventify_backend.Controllers
             return Ok(deletedCategoryId);
         }
 
-        [HttpGet("/Api/deleteRequestServices")]
+        [HttpGet("/api/deleteRequestServices")]
         public async Task<IActionResult> GetCategoriesWithRequestToDelete()
         {
             var categoriesWithRequestToDelete = await _appDbContext.ServiceCategories
@@ -123,7 +123,7 @@ namespace eventify_backend.Controllers
             return Ok(categoriesWithRequestToDelete);
         }
 
-        [HttpGet("/Api/deleteRequestServices/{categoryId}")]
+        [HttpGet("/api/deleteRequestServices/{categoryId}")]
 
         public async Task<IActionResult> DeleteRequestServices([FromRoute] int categoryId)
         {
@@ -143,7 +143,7 @@ namespace eventify_backend.Controllers
             return Ok(services);
         }
 
-        [HttpPut("/Api/deleteRequestServices/{Id}")]
+        [HttpPut("/api/deleteRequestServices/{Id}")]
         public async Task<IActionResult> ChangeDeleteRequestState([FromRoute] int Id)
         {
             var service = await _appDbContext.services.FindAsync(Id);
@@ -162,7 +162,7 @@ namespace eventify_backend.Controllers
 
         }
 
-        [HttpDelete("/Api/deleteRequestServices/{Id}")]
+        [HttpDelete("/api/deleteRequestServices/{Id}")]
         public async Task<IActionResult> ApproveVendorDeleteRequest([FromRoute] int Id)
         {
             var service = await _appDbContext.services.FindAsync(Id);
@@ -182,7 +182,7 @@ namespace eventify_backend.Controllers
             return Ok(new { DeletedServiceCategoryId = service.ServiceCategoryId, RemainingCount = remainingCount });
         }
 
-        [HttpGet("/Api/[Controller]/Categories/{Id}")]
+        [HttpGet("/api/[Controller]/categories/{Id}")]
         public async Task<IActionResult> GetAllServiceCategoriesOfVendor(Guid Id)
         {
             var categories = await _appDbContext.ServiceCategories
@@ -199,7 +199,7 @@ namespace eventify_backend.Controllers
             return Ok(categories);
         }
 
-        [HttpPut("/Api/[Controller]/deleteRequest/{SoRId}")]
+        [HttpPut("/api/[Controller]/deleteRequest/{SoRId}")]
         public async Task<IActionResult> RequestToDelete([FromRoute] int SORId)
         {
             var service = await _appDbContext.services.FindAsync(SORId);
@@ -216,7 +216,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/Api/vendorService/{categoryId}/{vendorId}")]
+        [HttpGet("/api/vendorService/{categoryId}/{vendorId}")]
 
         public async Task<IActionResult> GetVendorServiceByCategory([FromRoute] int categoryId, Guid vendorId)
         {
@@ -245,7 +245,7 @@ namespace eventify_backend.Controllers
             return Ok(servicesWithCategories);
         }
 
-        [HttpGet("/Api/bookedService/Categories/{Id}")]
+        [HttpGet("/api/bookedService/Categories/{Id}")]
         public async Task<IActionResult> GetServiceCategoriesOfBookedServices(Guid Id)
         {
             try
@@ -271,7 +271,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/Api/bookedService/{categoryId}/{vendorId}")]
+        [HttpGet("/api/bookedService/{categoryId}/{vendorId}")]
         public async Task<IActionResult> GetBookedServicesOfVendor(int categoryId, Guid vendorId)
         {
             try
@@ -315,7 +315,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/Api/bookingRequest/{vendorId}")]
+        [HttpGet("/api/bookingRequest/{vendorId}")]
 
         public async Task<IActionResult> GetCategoriesOfBookingRequest(Guid vendorId)
         {
@@ -323,7 +323,7 @@ namespace eventify_backend.Controllers
             {
                 var categories = await _appDbContext.ServiceCategories
                     .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSoRApproves != null && s.VendorId == vendorId && s.EventSoRApproves
-                    .Any(esra =>esra.IsApproved == false)))
+                    .Any(esra =>esra.IsRequest == true)))
                     .Select(x => new { x.CategoryId, x.ServiceCategoryName })
                     .ToListAsync();
 
@@ -339,7 +339,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/Api/bookingRequest/{categoryId}/{vendorId}")]
+        [HttpGet("/api/bookingRequest/{categoryId}/{vendorId}")]
         public async Task<IActionResult> GetServicesOfBookingRequest(int categoryId, Guid vendorId)
         {
             try
@@ -357,7 +357,7 @@ namespace eventify_backend.Controllers
                     .Where(s => s.ServiceCategoryId == categoryId &&
                                 s.VendorId == vendorId &&
                                 s.EventSoRApproves != null &&
-                                s.EventSoRApproves.Any(e => e.IsApproved == false))
+                                s.EventSoRApproves.Any(e => e.IsRequest == true))
                     .Select(x => new
                     {
                         soRId = x.SoRId,
@@ -382,7 +382,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpPut("/Api/bookingRequestApprove/{eventId}/{soRId}")]
+        [HttpPut("/api/bookingRequestApprove/{eventId}/{soRId}")]
         public async Task<IActionResult> BookServiceByVendor([FromRoute] int eventId,int soRId)
         {
             var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
@@ -402,6 +402,35 @@ namespace eventify_backend.Controllers
             await _appDbContext.SaveChangesAsync();
 
             return Ok();
+        }
+
+        [HttpPut("/api/bookingRequestReject/{eventId}/{soRId}")]
+        public async Task<IActionResult> RejectServiceFromVendor([FromRoute] int eventId, int soRId)
+        {
+            var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
+            if (eventSorToApprove == null)
+            {
+                return NotFound();
+            }
+
+            eventSorToApprove.IsRequest = !eventSorToApprove.IsRequest;
+            await _appDbContext.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpGet("/api/[Controller]/priceModels")]
+        public async Task<IActionResult> GetAllPriceModels()
+        {
+            var priceModels = await _appDbContext.PriceModels
+                .Select(x => new { x.ModelId, x.ModelName })
+                .ToListAsync();
+
+            if (priceModels == null || priceModels.Count == 0)
+            {
+                return NotFound(false);
+            }
+            return Ok(priceModels);
         }
 
     }

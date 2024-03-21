@@ -12,7 +12,7 @@ namespace eventify_backend.Models
         [ForeignKey("ServiceAndResource")]
         public int SoRId { get; set; }
         public DateTime TimeStamp { get; set; }
-        public bool IsApproved { get; set; }
+        public bool IsRequest { get; set; }
 
         public Event? Event { get; set; }
         public ServiceAndResource? ServiceAndResource { get; set; }
