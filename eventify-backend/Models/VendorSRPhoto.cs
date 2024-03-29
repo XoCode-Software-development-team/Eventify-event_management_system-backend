@@ -7,11 +7,10 @@ namespace eventify_backend.Models
     {
         [Key, Column(Order = 0)]
         [ForeignKey("ServiceAndResource")]
-        public int Id { get; set; }  // Foreign key and part of composite primary key
+        public int SoRId { get; set; }
 
         [Key, Column(Order = 1)]
-        public int photoId { get; set; }
-        public byte[]? Image { get; set; }  // Part of composite primary key
+        public string? Image { get; set; }
 
         public ServiceAndResource? ServiceAndResource { get; set; }
     }

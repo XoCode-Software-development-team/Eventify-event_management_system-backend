@@ -19,6 +19,24 @@ namespace eventifybackend.Migrations
                 .HasAnnotation("ProductVersion", "7.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("PriceVendorSRPrice", b =>
+                {
+                    b.Property<int>("PricePid")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VendorSRPricesSoRId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("VendorSRPricesPId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PricePid", "VendorSRPricesSoRId", "VendorSRPricesPId");
+
+                    b.HasIndex("VendorSRPricesSoRId", "VendorSRPricesPId");
+
+                    b.ToTable("PriceVendorSRPrice");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.Event", b =>
                 {
                     b.Property<int>("EventId")
@@ -131,8 +149,7 @@ namespace eventifybackend.Migrations
 
                     b.HasKey("Pid");
 
-                    b.HasIndex("ModelId")
-                        .IsUnique();
+                    b.HasIndex("ModelId");
 
                     b.ToTable("Prices");
                 });
@@ -287,8 +304,8 @@ namespace eventifybackend.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("longtext");
 
-                    b.Property<byte[]>("ProfilePic")
-                        .HasColumnType("longblob");
+                    b.Property<string>("ProfilePic")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Road")
                         .HasColumnType("longtext");
@@ -307,83 +324,74 @@ namespace eventifybackend.Migrations
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRLocation", b =>
                 {
-                    b.Property<int>("Id")
-                        .HasColumnType("int")
-                        .HasColumnOrder(1);
-
-                    b.Property<int>("LocationId")
+                    b.Property<int>("SoRId")
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<string>("Area")
-                        .HasColumnType("longtext");
+                    b.Property<string>("HouseNo")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
 
-                    b.Property<string>("Country")
-                        .HasColumnType("longtext");
+                    b.Property<string>("Area")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(2);
 
                     b.Property<string>("District")
-                        .HasColumnType("longtext");
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(3);
 
-                    b.Property<string>("HouseNo")
+                    b.Property<string>("Country")
                         .HasColumnType("longtext");
 
                     b.Property<string>("State")
                         .HasColumnType("longtext");
 
-                    b.HasKey("Id", "LocationId");
+                    b.HasKey("SoRId", "HouseNo", "Area", "District");
 
                     b.ToTable("VendorSRLocation");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRPhoto", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("SoRId")
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<int>("photoId")
-                        .HasColumnType("int")
+                    b.Property<string>("Image")
+                        .HasColumnType("varchar(255)")
                         .HasColumnOrder(1);
 
-                    b.Property<byte[]>("Image")
-                        .HasColumnType("longblob");
-
-                    b.HasKey("Id", "photoId");
+                    b.HasKey("SoRId", "Image");
 
                     b.ToTable("VendorSRPhoto");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRPrice", b =>
                 {
-                    b.Property<int>("ServiceAndResourceId")
+                    b.Property<int>("SoRId")
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<int>("PriceId")
+                    b.Property<int>("PId")
                         .HasColumnType("int")
                         .HasColumnOrder(1);
 
-                    b.HasKey("ServiceAndResourceId", "PriceId");
-
-                    b.HasIndex("PriceId");
+                    b.HasKey("SoRId", "PId");
 
                     b.ToTable("VendorSRPrices");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRVideo", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("SoRId")
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<int>("VideoId")
-                        .HasColumnType("int")
+                    b.Property<string>("Video")
+                        .HasColumnType("varchar(255)")
                         .HasColumnOrder(1);
 
-                    b.Property<byte[]>("Video")
-                        .HasColumnType("longblob");
-
-                    b.HasKey("Id", "VideoId");
+                    b.HasKey("SoRId", "Video");
 
                     b.ToTable("VendorSRVideo");
                 });
@@ -427,6 +435,21 @@ namespace eventifybackend.Migrations
                         .HasColumnType("longtext");
 
                     b.HasDiscriminator().HasValue("Vendor");
+                });
+
+            modelBuilder.Entity("PriceVendorSRPrice", b =>
+                {
+                    b.HasOne("eventify_backend.Models.Price", null)
+                        .WithMany()
+                        .HasForeignKey("PricePid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("eventify_backend.Models.VendorSRPrice", null)
+                        .WithMany()
+                        .HasForeignKey("VendorSRPricesSoRId", "VendorSRPricesPId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("eventify_backend.Models.Event", b =>
@@ -494,8 +517,8 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.Price", b =>
                 {
                     b.HasOne("eventify_backend.Models.PriceModel", "PriceModel")
-                        .WithOne("Price")
-                        .HasForeignKey("eventify_backend.Models.Price", "ModelId")
+                        .WithMany("Price")
+                        .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -562,7 +585,7 @@ namespace eventifybackend.Migrations
                 {
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
                         .WithMany("VendorSRLocations")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("SoRId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -573,7 +596,7 @@ namespace eventifybackend.Migrations
                 {
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
                         .WithMany("VendorRSPhotos")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("SoRId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -582,19 +605,11 @@ namespace eventifybackend.Migrations
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRPrice", b =>
                 {
-                    b.HasOne("eventify_backend.Models.Price", "Price")
-                        .WithMany("VendorSRPrices")
-                        .HasForeignKey("PriceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
                         .WithMany("VendorSRPrices")
-                        .HasForeignKey("ServiceAndResourceId")
+                        .HasForeignKey("SoRId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Price");
 
                     b.Navigation("ServiceAndResource");
                 });
@@ -603,7 +618,7 @@ namespace eventifybackend.Migrations
                 {
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
                         .WithMany("VendorRSVideos")
-                        .HasForeignKey("Id")
+                        .HasForeignKey("SoRId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -628,11 +643,6 @@ namespace eventifybackend.Migrations
                     b.Navigation("EventSoRApproves");
 
                     b.Navigation("ReviewAndRating");
-                });
-
-            modelBuilder.Entity("eventify_backend.Models.Price", b =>
-                {
-                    b.Navigation("VendorSRPrices");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.PriceModel", b =>

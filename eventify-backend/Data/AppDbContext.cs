@@ -53,31 +53,31 @@ namespace eventify_backend.Data
                 .HasForeignKey(ff => ff.SoRId);
 
             modelBuilder.Entity<VendorSRPhoto>()
-                .HasKey(vp => new { vp.Id, vp.photoId });
+                .HasKey(vp => new { vp.SoRId, vp.Image });
 
             modelBuilder.Entity<ServiceAndResource>()
                 .HasMany(s => s.VendorRSPhotos)
                 .WithOne(vr => vr.ServiceAndResource)
-                .HasForeignKey(vr => vr.Id);
+                .HasForeignKey(vr => vr.SoRId);
 
             modelBuilder.Entity<VendorSRVideo>()
-                .HasKey(vv => new { vv.Id, vv.VideoId });
+                .HasKey(vv => new { vv.SoRId, vv.Video });
 
             modelBuilder.Entity<ServiceAndResource>()
                 .HasMany(s => s.VendorRSVideos)
                 .WithOne(vr => vr.ServiceAndResource)
-                .HasForeignKey(vr => vr.Id);
+                .HasForeignKey(vr => vr.SoRId);
 
             modelBuilder.Entity<VendorSRPrice>()
-                .HasKey(vp => new { vp.ServiceAndResourceId, vp.PriceId });
+                .HasKey(vp => new { vp.SoRId, vp.PId });
 
             modelBuilder.Entity<VendorSRLocation>()
-    .            HasKey(v => new { v.Id, v.LocationId });
+    .            HasKey(v => new { v.SoRId, v.HouseNo, v.Area, v.District });
 
             modelBuilder.Entity<VendorSRLocation>()
                 .HasOne(v => v.ServiceAndResource)
                 .WithMany(sr => sr.VendorSRLocations) // Specify the navigation property in ServiceAndResource entity
-                .HasForeignKey(v => v.Id);
+                .HasForeignKey(v => v.SoRId);
 
             modelBuilder.Entity<EventSR>()
                 .HasKey(e => new { e.Id, e.SORId });
