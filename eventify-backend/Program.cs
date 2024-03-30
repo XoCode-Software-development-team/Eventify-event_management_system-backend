@@ -1,10 +1,12 @@
 using eventify_backend.Data;
+using eventify_backend.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<ServiceService>();
 
 var connectionString = builder.Configuration.GetConnectionString("EventifyDbConnectionString");
 

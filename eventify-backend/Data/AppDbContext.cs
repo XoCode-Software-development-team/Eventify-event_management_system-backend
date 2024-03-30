@@ -10,7 +10,7 @@ namespace eventify_backend.Data
         public DbSet<ServiceAndResource> ServiceAndResources { get; set; }
         public DbSet<FeatureAndFacility> FeatureAndFacility { get; set; }
 
-        public DbSet<Service> services { get; set; }
+        public DbSet<Service> Services { get; set; }
 
         public DbSet<ServiceCategory> ServiceCategories { get; set; }
 
@@ -35,10 +35,6 @@ namespace eventify_backend.Data
         public DbSet<EventSR> EventSr { get; set; }
 
         public DbSet<ReviewAndRating> ReviewAndRatings { get; set; }
-
-        public DbSet<ReviewContent> ReviewContent { get; set; }
-
-        public DbSet<Rating> Rating { get; set; }
 
         public DbSet<EventSoRApprove> EventSoRApproves { get; set; }
 
@@ -92,16 +88,8 @@ namespace eventify_backend.Data
                 .WithMany(e => e.EventSRs)
                 .HasForeignKey(e => e.SORId);
 
-            modelBuilder.Entity<ReviewContent>()
-                .HasKey(r => new { r.Id, r.Content });
-
             modelBuilder.Entity<ReviewAndRating>()
-                .HasMany(r => r.ReviewAndRatingContents)
-                .WithOne(rc => rc.ReviewAndRating)
-                .HasForeignKey(rc => rc.Id);
-
-            modelBuilder.Entity<Rating>()
-                .HasKey(r => new { r.Id, r.Ratings });
+                .HasKey(rr => new { rr.EventId, rr.SoRId });
 
             modelBuilder.Entity<EventSoRApprove>()
               .HasKey(e => new { e.EventId, e.SoRId });

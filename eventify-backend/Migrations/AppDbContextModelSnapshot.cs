@@ -102,15 +102,10 @@ namespace eventifybackend.Migrations
                     b.Property<bool>("IsRequest")
                         .HasColumnType("tinyint(1)");
 
-                    b.Property<int?>("ReviewAndRatingId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("TimeStamp")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("EventId", "SoRId");
-
-                    b.HasIndex("ReviewAndRatingId");
 
                     b.HasIndex("SoRId");
 
@@ -168,61 +163,28 @@ namespace eventifybackend.Migrations
                     b.ToTable("PriceModels");
                 });
 
-            modelBuilder.Entity("eventify_backend.Models.Rating", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    b.Property<float>("Ratings")
-                        .HasColumnType("float")
-                        .HasColumnOrder(1);
-
-                    b.HasKey("Id", "Ratings");
-
-                    b.ToTable("Rating");
-                });
-
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
                     b.Property<int>("EventId")
                         .HasColumnType("int");
 
                     b.Property<int>("SoRId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Comment")
+                        .HasColumnType("longtext");
+
+                    b.Property<float>("Ratings")
+                        .HasColumnType("float");
+
                     b.Property<DateTime>("TimeSpan")
                         .HasColumnType("datetime(6)");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventId");
+                    b.HasKey("EventId", "SoRId");
 
                     b.HasIndex("SoRId");
 
                     b.ToTable("ReviewAndRatings");
-                });
-
-            modelBuilder.Entity("eventify_backend.Models.ReviewContent", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Content")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<int?>("ReviewAndRatingId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id", "Content");
-
-                    b.HasIndex("ReviewAndRatingId");
-
-                    b.ToTable("ReviewContent");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.ServiceAndResource", b =>
@@ -488,10 +450,6 @@ namespace eventifybackend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("eventify_backend.Models.ReviewAndRating", null)
-                        .WithMany("EventSoRApprove")
-                        .HasForeignKey("ReviewAndRatingId");
-
                     b.HasOne("eventify_backend.Models.ServiceAndResource", "ServiceAndResource")
                         .WithMany("EventSoRApproves")
                         .HasForeignKey("SoRId")
@@ -525,17 +483,6 @@ namespace eventifybackend.Migrations
                     b.Navigation("PriceModel");
                 });
 
-            modelBuilder.Entity("eventify_backend.Models.Rating", b =>
-                {
-                    b.HasOne("eventify_backend.Models.ReviewAndRating", "ReviewAndRating")
-                        .WithMany("Ratings")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReviewAndRating");
-                });
-
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
                 {
                     b.HasOne("eventify_backend.Models.Event", "Event")
@@ -553,21 +500,6 @@ namespace eventifybackend.Migrations
                     b.Navigation("Event");
 
                     b.Navigation("ServiceAndResource");
-                });
-
-            modelBuilder.Entity("eventify_backend.Models.ReviewContent", b =>
-                {
-                    b.HasOne("eventify_backend.Models.ReviewAndRating", "ReviewAndRating")
-                        .WithMany("ReviewAndRatingContents")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("eventify_backend.Models.ReviewAndRating", null)
-                        .WithMany("ReviewContents")
-                        .HasForeignKey("ReviewAndRatingId");
-
-                    b.Navigation("ReviewAndRating");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.ServiceAndResource", b =>
@@ -648,17 +580,6 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.PriceModel", b =>
                 {
                     b.Navigation("Price");
-                });
-
-            modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
-                {
-                    b.Navigation("EventSoRApprove");
-
-                    b.Navigation("Ratings");
-
-                    b.Navigation("ReviewAndRatingContents");
-
-                    b.Navigation("ReviewContents");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.ServiceAndResource", b =>
