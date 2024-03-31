@@ -510,6 +510,86 @@ namespace eventify_backend.Services
                     }
                 }
 
+                var location = json["serviceLocations"] as JArray;
+
+                if (location != null)
+                {
+                    foreach (var item in location)
+                    {
+                        var vendorSRLocation = new VendorSRLocation
+                        {
+                            SoRId = service.SoRId,
+                            HouseNo = item["houseNoStreetRoad"]?.ToString(),
+                            Area = item["cityTownArea"]?.ToString(),
+                            District = item["district"]?.ToString(),
+                            Country = item["country"]?.ToString(),
+                            State = item["stateProvinceRegion"]?.ToString(),
+                        };
+
+                        _appDbContext.VendorSRLocation.Add(vendorSRLocation);
+
+                    }
+                }
+
+                var price = json["servicePricePackages"] as JArray;
+
+                if (price != null)
+                {
+                    foreach (var item in price)
+                    {
+                        var servicePrice = new Price
+                        {
+                            Pname = item["packageName"]?.ToString(),
+                            BasePrice = item["basePrice"]?.Value<double>() ?? 0,
+                            ModelId = item["priceModel"]?.Value<int>() ?? 0
+                        };
+
+                        _appDbContext.Prices.Add(servicePrice);
+                        await _appDbContext.SaveChangesAsync();
+
+
+                        var vendorSRPrice = new VendorSRPrice
+                        {
+                            SoRId = service.SoRId,
+                            PId = servicePrice.Pid
+                        };
+
+                        _appDbContext.VendorSRPrices.Add(vendorSRPrice);
+                    }
+                }
+
+                var images = json["images"] as JArray;
+
+                if (images != null)
+                {
+                    foreach (var image in images)
+                    {
+                        var vendorSRPhoto = new VendorSRPhoto
+                        {
+                            SoRId = service.SoRId,
+                            Image = image.ToString()
+                        };
+
+                        _appDbContext.VendorSRPhoto.Add(vendorSRPhoto);
+                    }
+                }
+
+                var videos = json["videos"] as JArray;
+
+                if (videos != null)
+                {
+                    foreach (var video in videos)
+                    {
+                        var vendorSRVideo = new VendorSRVideo
+                        {
+                            SoRId = service.SoRId,
+                            Video = video.ToString()
+                        };
+
+                        _appDbContext.VendorSRVideo.Add(vendorSRVideo);
+                    }
+                }
+
                 // Similar handling for other entities
                 await _appDbContext.SaveChangesAsync();
             }
@@ -553,6 +633,7 @@ namespace eventify_backend.Services
             try
             {
                 var services = await _appDbContext.Services
+                    .Where(s => s.IsSuspend==false)
                     .Select(s => new
                     {
                         soRId = s.SoRId,
@@ -565,8 +646,18 @@ namespace eventify_backend.Services
                         },
                         vendor = s.Vendor != null ? s.Vendor.CompanyName : null,
                         description = s.Description,
+                        price = (
+                                    from vp in _appDbContext.VendorSRPrices
+                                    join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                    join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
+                                    where vp.SoRId == s.SoRId
+                                    select new
+                                    {
+                                        value = p.BasePrice,
+                                        model = pm.ModelName
+                                    }
+                                ).ToList(),
                         Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
-
                     }).ToListAsync();
 
                 return services;
@@ -583,10 +674,10 @@ namespace eventify_backend.Services
             try
             {
                 var service = await _appDbContext.Services
+                    .Where(s => s.SoRId == soRId)
                     .Select(s => new
                     {
                         name = s.Name,
-                        soRId = soRId,
                         vendor = new
                         {
                             vendorId = s.VendorId,
@@ -594,14 +685,28 @@ namespace eventify_backend.Services
                         },
                         capacity = s.Capacity,
                         description = s.Description,
-                        reviewAndRating = s.ReviewAndRating
+                        reviewAndRating = s.ReviewAndRating != null ? s.ReviewAndRating
                             .Select(rr => new
                             {
                                 avatar = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.ProfilePic : null,
                                 fname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.FirstName : null,
-                                lname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.LastName : null, 
+                                lname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.LastName : null,
 
-                            })
+                            }) : null,
+                        featureAndFacility =s.FeaturesAndFacilities != null ? s.FeaturesAndFacilities.Select(ff => ff.FacilityName): null,
+                        price = (
+                                    from vp in _appDbContext.VendorSRPrices
+                                    join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                    join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
+                                    where vp.SoRId == s.SoRId
+                                    select new
+                                    {
+                                        value = p.BasePrice,
+                                        model = pm.ModelName
+                                    }
+                                ).ToList(),
+                        images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image): null,
+                        videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
                     })
                     .ToListAsync();
 
