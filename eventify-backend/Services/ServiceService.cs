@@ -3,9 +3,7 @@ using eventify_backend.DTOs;
 using eventify_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
-using System.Numerics;
 using System.Text.Json;
-using System.Xml.Linq;
 
 namespace eventify_backend.Services
 {
@@ -78,13 +76,16 @@ namespace eventify_backend.Services
         {
             try
             {
-                var service = await _appDbContext.ServiceAndResources.FindAsync(SORId);
+                var service = await _appDbContext.ServiceAndResources.FindAsync(SORId);  // Find the service by ID
+
                 if (service == null)
                     return null;
 
-                service.IsSuspend = !service.IsSuspend;
+                service.IsSuspend = !service.IsSuspend; // Toggle the suspend state
                 await _appDbContext.SaveChangesAsync();
 
+
+                // Get the category ID of the service
                 var categoryId = await _appDbContext.Services
                     .Where(s => s.SoRId == service.SoRId)
                     .Select(s => s.ServiceCategoryId)
@@ -105,12 +106,13 @@ namespace eventify_backend.Services
         {
             try
             {
-                var service = await _appDbContext.Services.FindAsync(Id);
+                var service = await _appDbContext.Services.FindAsync(Id);    // Find the service by ID
+
                 if (service == null)
                     return null;
 
                 var deletedCategoryId = service.ServiceCategoryId;
-                _appDbContext.Services.Remove(service);
+                _appDbContext.Services.Remove(service);               // Remove the service from the databas
                 await _appDbContext.SaveChangesAsync();
 
                 return deletedCategoryId;
@@ -126,6 +128,8 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Query to join ServiceCategories with Services flagged for deletion and select relevant data into ServiceCategoryDTO objects
+
                 var categoriesWithRequestToDelete = await _appDbContext.ServiceCategories
                     .Join(_appDbContext.Services.Where(s => s.IsRequestToDelete),
                         category => category.CategoryId,
@@ -134,7 +138,7 @@ namespace eventify_backend.Services
                     .Distinct()
                     .ToListAsync();
 
-                return categoriesWithRequestToDelete;
+                return categoriesWithRequestToDelete;         // Return the list of categories with services flagged for deletion
             }
             catch (Exception ex)
             {
@@ -147,6 +151,8 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Query to retrieve services within the specified category with requests to delete
+
                 var services = await _appDbContext.Services
                     .Where(s => s.ServiceCategoryId == categoryId && s.IsRequestToDelete)
                     .Select(s => new ServiceDTO
@@ -166,11 +172,11 @@ namespace eventify_backend.Services
         }
 
 
-        public async Task<object?> ChangeDeleteRequestStateAsync(int Id)
+        public async Task<object?> ChangeDeleteRequestStateAsync(int soRId)
         {
             try
             {
-                var service = await _appDbContext.Services.FindAsync(Id);
+                var service = await _appDbContext.Services.FindAsync(soRId); // Find service by soRId
                 if (service == null)
                 {
                     return null;
@@ -191,11 +197,11 @@ namespace eventify_backend.Services
         }
 
 
-        public async Task<object?> ApproveVendorDeleteRequestAsync(int Id)
+        public async Task<object?> ApproveVendorDeleteRequestAsync(int soRId)
         {
             try
             {
-                var service = await _appDbContext.Services.FindAsync(Id);
+                var service = await _appDbContext.Services.FindAsync(soRId);
                 if (service == null)
                 {
                     return null;
@@ -263,6 +269,8 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Retrieve the service category and vendor
+
                 var serviceCategory = _appDbContext.ServiceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
                 var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
 
@@ -270,6 +278,8 @@ namespace eventify_backend.Services
                 {
                     throw new Exception("Service category or vendor not found.");
                 }
+
+                // Query to retrieve services within the specified category and vendor
 
                 var servicesWithCategories = await _appDbContext.Services
                     .Where(s => s.ServiceCategoryId == categoryId && s.VendorId == vendorId)
@@ -295,8 +305,11 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Get the current date and time
+
                 var currentDate = DateTime.Now;
 
+                // Query to retrieve service categories of booked services for the specified vendor
                 var categories = await _appDbContext.ServiceCategories
                     .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSRs != null &&
                         s.EventSRs.Any(esr => esr.Event != null && esr.ServiceAndResource != null &&
@@ -317,8 +330,10 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Get the current date and time
                 var currentDate = DateTime.Now;
 
+                // Query to retrieve booked services of the vendor for the specified service category
                 var services = await _appDbContext.Services
                     .Where(s => s.ServiceCategoryId == categoryId &&
                                 s.VendorId == vendorId &&
@@ -346,9 +361,10 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Query to retrieve categories of booking requests for the vendor
                 var categories = await _appDbContext.ServiceCategories
                     .Where(sc => sc.Services != null && sc.Services.Any(s => s.EventSoRApproves != null && s.VendorId == vendorId && s.EventSoRApproves
-                        .Any(esra => esra.IsRequest == true)))
+                        .Any(esra => esra.IsApprove == false)))
                     .Select(x => new { x.CategoryId, x.ServiceCategoryName })
                     .ToListAsync();
 
@@ -365,6 +381,7 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Retrieve the service category and vendor
                 var serviceCategory = _appDbContext.ServiceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
                 var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
 
@@ -375,11 +392,12 @@ namespace eventify_backend.Services
 
                 var currentDate = DateTime.Now;
 
+                // Query to retrieve services with booking requests for the specified category and vendor
                 var services = await _appDbContext.Services
                     .Where(s => s.ServiceCategoryId == categoryId &&
                                 s.VendorId == vendorId &&
                                 s.EventSoRApproves != null &&
-                                s.EventSoRApproves.Any(e => e.IsRequest == true))
+                                s.EventSoRApproves.Any(e => e.IsApprove == false))
                     .Select(x => new
                     {
                         SoRId = x.SoRId,
@@ -404,20 +422,25 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Find the event-SOR approval record
                 var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
                 if (eventSorToApprove == null)
                 {
                     return false;
                 }
 
+                eventSorToApprove.IsApprove = true;
+
+                // Create a new event-SR record
                 var eventSR = new EventSR
                 {
                     Id = eventId,
                     SORId = soRId,
                 };
 
+                // Add the new event-SR record to the context
                 await _appDbContext.EventSr.AddAsync(eventSR);
-                _appDbContext.EventSoRApproves.Remove(eventSorToApprove);
+                //_appDbContext.EventSoRApproves.Remove(eventSorToApprove);
                 await _appDbContext.SaveChangesAsync();
 
                 return true;
@@ -433,13 +456,15 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Find the event-SOR approval record
                 var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
                 if (eventSorToApprove == null)
                 {
                     return false;
                 }
 
-                eventSorToApprove.IsRequest = !eventSorToApprove.IsRequest;
+                eventSorToApprove.IsApprove = !eventSorToApprove.IsApprove;    // Toggle the approval status
+
                 await _appDbContext.SaveChangesAsync();
 
                 return true;
@@ -455,6 +480,7 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Retrieve all price models from the database
                 var priceModels = await _appDbContext.PriceModels
                     .Select(x => new PriceModelDto { ModelId = x.ModelId, ModelName = x.ModelName })
                     .ToListAsync();
@@ -468,7 +494,7 @@ namespace eventify_backend.Services
         }
 
 
-        public async Task AddNewService(Guid vendorId, object data)
+        public async Task AddNewServiceAsync(Guid vendorId, object data)
         {
             try
             {
@@ -477,10 +503,12 @@ namespace eventify_backend.Services
                     throw new ArgumentNullException(nameof(data), "No data provided.");
                 }
 
-                string jsonString = data?.ToString() ?? string.Empty;
+                string jsonString = data?.ToString() ?? string.Empty;         // Convert data to JSON string
 
-                JObject json = JObject.Parse(jsonString);
+                JObject json = JObject.Parse(jsonString);         // Parse JSON string to JObject
 
+
+                // Create new Service object
                 var service = new Service
                 {
                     Name = json["serviceName"]?.ToString(),
@@ -492,15 +520,19 @@ namespace eventify_backend.Services
                     Capacity = json["serviceMaxCapacity"]?.Value<int>() ?? 0,
                 };
 
+                // Add service to the database
                 _appDbContext.Services.Add(service);
 
-                await _appDbContext.SaveChangesAsync();
+                await _appDbContext.SaveChangesAsync();   // Save changes to the database
 
-                var featureAndFacility = json["serviceFeatures"] as JArray;
+
+                // Handle feature and facility
+                var featureAndFacility = json["serviceFeatures"] as JArray;// Extract feature and facility information from the JSON data
                 if (featureAndFacility != null)
                 {
                     foreach (var item in featureAndFacility)
                     {
+                        // Create a new FeatureAndFacility object
                         var featureOrFacility = new FeatureAndFacility
                         {
                             FacilityName = item["name"]?.ToString(),
@@ -510,13 +542,13 @@ namespace eventify_backend.Services
                     }
                 }
 
-                var location = json["serviceLocations"] as JArray;
+                var location = json["serviceLocations"] as JArray; // Extract location information from the JSON data
 
                 if (location != null)
                 {
                     foreach (var item in location)
                     {
-                        var vendorSRLocation = new VendorSRLocation
+                        var vendorSRLocation = new VendorSRLocation   // Create a new VendorSRLocation object
                         {
                             SoRId = service.SoRId,
                             HouseNo = item["houseNoStreetRoad"]?.ToString(),
@@ -526,15 +558,17 @@ namespace eventify_backend.Services
                             State = item["stateProvinceRegion"]?.ToString(),
                         };
 
+                        // Add the location to the database context
                         _appDbContext.VendorSRLocation.Add(vendorSRLocation);
 
                     }
                 }
 
-                var price = json["servicePricePackages"] as JArray;
+                var price = json["servicePricePackages"] as JArray;// Extract price information from the JSON data
 
                 if (price != null)
                 {
+                    // Iterate over each price package item
                     foreach (var item in price)
                     {
                         var servicePrice = new Price
@@ -544,26 +578,30 @@ namespace eventify_backend.Services
                             ModelId = item["priceModel"]?.Value<int>() ?? 0
                         };
 
+                        // Add the price to the database context
                         _appDbContext.Prices.Add(servicePrice);
                         await _appDbContext.SaveChangesAsync();
 
 
-                        var vendorSRPrice = new VendorSRPrice
+                        var vendorSRPrice = new VendorSRPrice   // Create a new VendorSRPrice object
                         {
                             SoRId = service.SoRId,
                             PId = servicePrice.Pid
                         };
 
+                        // Add the vendor service price to the database context
                         _appDbContext.VendorSRPrices.Add(vendorSRPrice);
                     }
                 }
 
+                // Extract image information from the JSON data
                 var images = json["images"] as JArray;
 
                 if (images != null)
                 {
                     foreach (var image in images)
                     {
+                        // Create a new VendorSRPhoto object
                         var vendorSRPhoto = new VendorSRPhoto
                         {
                             SoRId = service.SoRId,
@@ -574,6 +612,7 @@ namespace eventify_backend.Services
                     }
                 }
 
+                // Extract video information from the JSON data
                 var videos = json["videos"] as JArray;
 
                 if (videos != null)
@@ -586,6 +625,7 @@ namespace eventify_backend.Services
                             Video = video.ToString()
                         };
 
+                        // Add the video to the database context
                         _appDbContext.VendorSRVideo.Add(vendorSRVideo);
                     }
                 }
@@ -608,14 +648,16 @@ namespace eventify_backend.Services
         }
 
 
-        public async Task<object> GetMaxPriceOfServiceAsync()
+        public async Task<object> GetMaxPriceOfServiceAsync(int modelId)
         {
             try
             {
+                // Retrieve the maximum service price for the specified model ID
                 var maxServicePrice = await (
                     from service in _appDbContext.Services
                     join vendorSRPrice in _appDbContext.VendorSRPrices on service.SoRId equals vendorSRPrice.SoRId
                     join price in _appDbContext.Prices on vendorSRPrice.PId equals price.Pid
+                    where price.ModelId == modelId
                     select price.BasePrice
                 ).MaxAsync();
 
@@ -632,12 +674,14 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Retrieve services for clients that are not suspended
                 var services = await _appDbContext.Services
                     .Where(s => s.IsSuspend==false)
                     .Select(s => new
                     {
                         soRId = s.SoRId,
                         name = s.Name,
+                        categoryId = s.ServiceCategoryId,
                         rating = new
                         {
                             rate = s.OverallRate,
@@ -654,7 +698,8 @@ namespace eventify_backend.Services
                                     select new
                                     {
                                         value = p.BasePrice,
-                                        model = pm.ModelName
+                                        priceModelName = pm.ModelName,
+                                        id = pm.ModelId
                                     }
                                 ).ToList(),
                         Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
@@ -673,10 +718,12 @@ namespace eventify_backend.Services
         {
             try
             {
+                // Retrieve service details for the specified service ID
                 var service = await _appDbContext.Services
                     .Where(s => s.SoRId == soRId)
                     .Select(s => new
                     {
+                        soRId = s.SoRId,
                         name = s.Name,
                         vendor = new
                         {
@@ -684,15 +731,19 @@ namespace eventify_backend.Services
                             companyName = s.Vendor != null ? s.Vendor.CompanyName : null,
                         },
                         capacity = s.Capacity,
+                        serviceCategory = s.ServiceCategory,
                         description = s.Description,
                         reviewAndRating = s.ReviewAndRating != null ? s.ReviewAndRating
+                            .Where(rr => rr.SoRId == s.SoRId)
                             .Select(rr => new
                             {
                                 avatar = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.ProfilePic : null,
                                 fname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.FirstName : null,
                                 lname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.LastName : null,
-
-                            }) : null,
+                                comment = rr.Comment,
+                                rate = rr.Ratings
+                            })
+                            .ToList() : null,
                         featureAndFacility =s.FeaturesAndFacilities != null ? s.FeaturesAndFacilities.Select(ff => ff.FacilityName): null,
                         price = (
                                     from vp in _appDbContext.VendorSRPrices
@@ -702,9 +753,15 @@ namespace eventify_backend.Services
                                     select new
                                     {
                                         value = p.BasePrice,
-                                        model = pm.ModelName
+                                        model = pm.ModelName,
+                                        modelId = pm.ModelId,
+                                        name = p.Pname
                                     }
                                 ).ToList(),
+                        location =s.VendorSRLocations != null ? s.VendorSRLocations.Select(vl => new
+                        {
+                            vl.HouseNo,vl.Area,vl.District,vl.Country,vl.State
+                        }).ToList() : null,
                         images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image): null,
                         videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
                     })
@@ -718,6 +775,149 @@ namespace eventify_backend.Services
                 throw new Exception("An error occurred whiel getting service details", ex);
             }
 
+        }
+
+
+        public async Task UpdateServiceAsync(Guid vendorId, int soRId, object data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    throw new ArgumentNullException(nameof(data), "No data provided.");
+                }
+
+                string jsonString = data?.ToString() ?? string.Empty;
+
+                JObject json = JObject.Parse(jsonString);
+
+                var service = await _appDbContext.Services
+                    .Include(s => s.FeaturesAndFacilities)
+                    .Include(s => s.VendorSRPrices)
+                    .Include(s => s.VendorSRLocations)
+                    .Include(s => s.VendorRSPhotos)
+                    .Include(s => s.VendorRSVideos)
+                    .FirstOrDefaultAsync(s => s.SoRId == soRId && s.VendorId == vendorId);
+
+                if (service == null)
+                {
+                    throw new ArgumentException("Service not found.");
+                }
+
+                // Update service properties with data
+                service.Name = json["serviceName"]?.ToString();
+                service.Description = json["serviceDescription"]?.ToString();
+                service.ServiceCategoryId = json["serviceCategory"]?.Value<int>() ?? 0;
+                service.Capacity = json["serviceMaxCapacity"]?.Value<int>() ?? 0;
+
+                // Clear existing related entities
+                _appDbContext.FeatureAndFacility.RemoveRange(service.FeaturesAndFacilities);
+                _appDbContext.VendorSRPrices.RemoveRange(service.VendorSRPrices);
+                _appDbContext.VendorSRLocation.RemoveRange(service.VendorSRLocations);
+                _appDbContext.VendorSRPhoto.RemoveRange(service.VendorRSPhotos);
+                _appDbContext.VendorSRVideo.RemoveRange(service.VendorRSVideos);
+
+                // Add new related entities
+                var featureAndFacility = json["serviceFeatures"] as JArray;
+                if (featureAndFacility != null)
+                {
+                    foreach (var item in featureAndFacility)
+                    {
+                        var featureOrFacility = new FeatureAndFacility
+                        {
+                            FacilityName = item["name"]?.ToString(),
+                            SoRId = service.SoRId
+                        };
+                        service.FeaturesAndFacilities.Add(featureOrFacility);
+                    }
+                }
+
+                var location = json["serviceLocations"] as JArray;
+                if (location != null)
+                {
+                    foreach (var item in location)
+                    {
+                        var vendorSRLocation = new VendorSRLocation
+                        {
+                            SoRId = service.SoRId,
+                            HouseNo = item["houseNoStreetRoad"]?.ToString(),
+                            Area = item["cityTownArea"]?.ToString(),
+                            District = item["district"]?.ToString(),
+                            Country = item["country"]?.ToString(),
+                            State = item["stateProvinceRegion"]?.ToString(),
+                        };
+
+                        service.VendorSRLocations.Add(vendorSRLocation);
+                    }
+                }
+
+                var price = json["servicePricePackages"] as JArray;
+                if (price != null)
+                {
+                    foreach (var item in price)
+                    {
+                        var servicePrice = new Price
+                        {
+                            Pname = item["packageName"]?.ToString(),
+                            BasePrice = item["basePrice"]?.Value<double>() ?? 0,
+                            ModelId = item["priceModel"]?.Value<int>() ?? 0
+                        };
+
+                        var vendorSRPrice = new VendorSRPrice
+                        {
+                            SoRId = service.SoRId,
+                            PId = servicePrice.Pid
+                        };
+
+                        service.VendorSRPrices.Add(vendorSRPrice);
+                    }
+                }
+
+                var images = json["images"] as JArray;
+                if (images != null)
+                {
+                    foreach (var image in images)
+                    {
+                        var vendorSRPhoto = new VendorSRPhoto
+                        {
+                            SoRId = service.SoRId,
+                            Image = image.ToString()
+                        };
+
+                        service.VendorRSPhotos.Add(vendorSRPhoto);
+                    }
+                }
+
+                var videos = json["videos"] as JArray;
+                if (videos != null)
+                {
+                    foreach (var video in videos)
+                    {
+                        var vendorSRVideo = new VendorSRVideo
+                        {
+                            SoRId = service.SoRId,
+                            Video = video.ToString()
+                        };
+
+                        service.VendorRSVideos.Add(vendorSRVideo);
+                    }
+                }
+
+                // Save changes to the database
+                await _appDbContext.SaveChangesAsync();
+            }
+            catch (ArgumentNullException)
+            {
+                throw; // Rethrow to maintain original behavior
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException("Invalid JSON format.", nameof(data), ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred.", ex);
+            }
         }
     }
 }

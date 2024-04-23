@@ -1,4 +1,5 @@
-﻿using eventify_backend.Data;
+﻿
+using eventify_backend.Data;
 using eventify_backend.DTOs;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -61,7 +62,7 @@ namespace eventify_backend.Controllers
                 if (services == null || services.Count == 0)
                 {
                     // Return 404 Not Found if no services found
-                    return NotFound();
+                    return NotFound("not found");
                 }
 
                 // Return the retrieved services
@@ -345,7 +346,22 @@ namespace eventify_backend.Controllers
         {
             try
             {
-                await _serviceService.AddNewService(vendorId, data);
+                await _serviceService.AddNewServiceAsync(vendorId, data);
+                return Ok();
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/api/[Controller]/update/{vendorId}/{soRId}")]
+        public async Task<IActionResult> UpdateService([FromRoute] Guid vendorId,int soRId, [FromBody] object data)
+        {
+            try
+            {
+                await _serviceService.UpdateServiceAsync(vendorId,soRId, data);
                 return Ok();
             }
 
@@ -356,12 +372,12 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/[Controller]/maxPrice")]
-        public async Task<IActionResult> GetMaxPriceOfService()
+        [HttpGet("/api/[Controller]/maxPrice/{modelId}")]
+        public async Task<IActionResult> GetMaxPriceOfService(int modelId)
         {
             try
             {
-                var result = await _serviceService.GetMaxPriceOfServiceAsync();
+                var result = await _serviceService.GetMaxPriceOfServiceAsync(modelId);
                 return Ok(result);
             }
 
@@ -402,5 +418,6 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+    
     }
 }

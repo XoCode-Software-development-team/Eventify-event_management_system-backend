@@ -8,8 +8,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServiceService>();
 
+// Retrieve connection string from configuration.
 var connectionString = builder.Configuration.GetConnectionString("EventifyDbConnectionString");
 
+// Configure Entity Framework Core to use MySQL.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
@@ -20,6 +22,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhost4200",
         builder =>
         {
+            // Allow requests from http://localhost:4200
             builder.WithOrigins("http://localhost:4200")
                    .AllowAnyHeader()
                    .AllowAnyMethod();
@@ -28,8 +31,8 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseHttpsRedirection(); // Redirect HTTP requests to HTTPS
+app.UseStaticFiles(); // Serve static files
 
 app.UseRouting();
 
@@ -38,8 +41,10 @@ app.UseCors("AllowLocalhost4200");
 
 app.UseAuthorization();
 
+// Configure controller routes
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+// Run the application
 app.Run();

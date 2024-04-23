@@ -99,7 +99,7 @@ namespace eventifybackend.Migrations
                     b.Property<int>("SoRId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsRequest")
+                    b.Property<bool>("IsApprove")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("TimeStamp")
