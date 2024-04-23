@@ -811,97 +811,125 @@ namespace eventify_backend.Services
                 service.Capacity = json["serviceMaxCapacity"]?.Value<int>() ?? 0;
 
                 // Clear existing related entities
-                _appDbContext.FeatureAndFacility.RemoveRange(service.FeaturesAndFacilities);
-                _appDbContext.VendorSRPrices.RemoveRange(service.VendorSRPrices);
-                _appDbContext.VendorSRLocation.RemoveRange(service.VendorSRLocations);
-                _appDbContext.VendorSRPhoto.RemoveRange(service.VendorRSPhotos);
-                _appDbContext.VendorSRVideo.RemoveRange(service.VendorRSVideos);
-
-                // Add new related entities
-                var featureAndFacility = json["serviceFeatures"] as JArray;
-                if (featureAndFacility != null)
+                // Remove all entries related to features and facilities of the service
+                if (service.FeaturesAndFacilities != null)
                 {
-                    foreach (var item in featureAndFacility)
+                    _appDbContext.FeatureAndFacility.RemoveRange(service.FeaturesAndFacilities);
+
+                    var featureAndFacility = json["serviceFeatures"] as JArray;
+
+                    if (featureAndFacility != null)
                     {
-                        var featureOrFacility = new FeatureAndFacility
+                        foreach (var item in featureAndFacility)
                         {
-                            FacilityName = item["name"]?.ToString(),
-                            SoRId = service.SoRId
-                        };
-                        service.FeaturesAndFacilities.Add(featureOrFacility);
+                            var featureOrFacility = new FeatureAndFacility
+                            {
+                                FacilityName = item["name"]?.ToString(),
+                                SoRId = service.SoRId
+                            };
+                            service.FeaturesAndFacilities.Add(featureOrFacility);
+                        }
                     }
                 }
 
-                var location = json["serviceLocations"] as JArray;
-                if (location != null)
+                // Remove all price entries related to the service
+                if (service.VendorSRPrices != null)
                 {
-                    foreach (var item in location)
-                    {
-                        var vendorSRLocation = new VendorSRLocation
-                        {
-                            SoRId = service.SoRId,
-                            HouseNo = item["houseNoStreetRoad"]?.ToString(),
-                            Area = item["cityTownArea"]?.ToString(),
-                            District = item["district"]?.ToString(),
-                            Country = item["country"]?.ToString(),
-                            State = item["stateProvinceRegion"]?.ToString(),
-                        };
+                    _appDbContext.VendorSRPrices.RemoveRange(service.VendorSRPrices);
 
-                        service.VendorSRLocations.Add(vendorSRLocation);
+                    var price = json["servicePricePackages"] as JArray;
+                    if (price != null)
+                    {
+                        foreach (var item in price)
+                        {
+                            var servicePrice = new Price
+                            {
+                                Pname = item["packageName"]?.ToString(),
+                                BasePrice = item["basePrice"]?.Value<double>() ?? 0,
+                                ModelId = item["priceModel"]?.Value<int>() ?? 0
+                            };
+
+                            await _appDbContext.Prices.AddAsync(servicePrice);
+                            await _appDbContext.SaveChangesAsync();
+
+                            var vendorSRPrice = new VendorSRPrice
+                            {
+                                SoRId = service.SoRId,
+                                PId = servicePrice.Pid
+                            };
+
+                            service.VendorSRPrices.Add(vendorSRPrice);
+                        }
                     }
                 }
 
-                var price = json["servicePricePackages"] as JArray;
-                if (price != null)
+                // Remove all location entries related to the service
+                if (service.VendorSRLocations != null)
                 {
-                    foreach (var item in price)
+                    _appDbContext.VendorSRLocation.RemoveRange(service.VendorSRLocations);
+
+                    var location = json["serviceLocations"] as JArray;
+                    if (location != null)
                     {
-                        var servicePrice = new Price
+                        foreach (var item in location)
                         {
-                            Pname = item["packageName"]?.ToString(),
-                            BasePrice = item["basePrice"]?.Value<double>() ?? 0,
-                            ModelId = item["priceModel"]?.Value<int>() ?? 0
-                        };
+                            var vendorSRLocation = new VendorSRLocation
+                            {
+                                SoRId = service.SoRId,
+                                HouseNo = item["houseNoStreetRoad"]?.ToString(),
+                                Area = item["cityTownArea"]?.ToString(),
+                                District = item["district"]?.ToString(),
+                                Country = item["country"]?.ToString(),
+                                State = item["stateProvinceRegion"]?.ToString(),
+                            };
 
-                        var vendorSRPrice = new VendorSRPrice
-                        {
-                            SoRId = service.SoRId,
-                            PId = servicePrice.Pid
-                        };
-
-                        service.VendorSRPrices.Add(vendorSRPrice);
+                            service.VendorSRLocations.Add(vendorSRLocation);
+                        }
                     }
                 }
 
-                var images = json["images"] as JArray;
-                if (images != null)
+                // Remove all photo entries related to the service
+                if (service.VendorRSPhotos != null)
                 {
-                    foreach (var image in images)
-                    {
-                        var vendorSRPhoto = new VendorSRPhoto
-                        {
-                            SoRId = service.SoRId,
-                            Image = image.ToString()
-                        };
+                    _appDbContext.VendorSRPhoto.RemoveRange(service.VendorRSPhotos);
 
-                        service.VendorRSPhotos.Add(vendorSRPhoto);
+                    var images = json["images"] as JArray;
+                    if (images != null)
+                    {
+                        foreach (var image in images)
+                        {
+                            var vendorSRPhoto = new VendorSRPhoto
+                            {
+                                SoRId = service.SoRId,
+                                Image = image.ToString()
+                            };
+
+                            service.VendorRSPhotos.Add(vendorSRPhoto);
+                        }
                     }
                 }
 
-                var videos = json["videos"] as JArray;
-                if (videos != null)
+                // Remove all video entries related to the service
+                if (service.VendorRSVideos != null)
                 {
-                    foreach (var video in videos)
-                    {
-                        var vendorSRVideo = new VendorSRVideo
-                        {
-                            SoRId = service.SoRId,
-                            Video = video.ToString()
-                        };
+                    _appDbContext.VendorSRVideo.RemoveRange(service.VendorRSVideos);
 
-                        service.VendorRSVideos.Add(vendorSRVideo);
+                    var videos = json["videos"] as JArray;
+                    if (videos != null)
+                    {
+                        foreach (var video in videos)
+                        {
+                            var vendorSRVideo = new VendorSRVideo
+                            {
+                                SoRId = service.SoRId,
+                                Video = video.ToString()
+                            };
+
+                            service.VendorRSVideos.Add(vendorSRVideo);
+                        }
                     }
                 }
+
 
                 // Save changes to the database
                 await _appDbContext.SaveChangesAsync();
