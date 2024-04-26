@@ -1,5 +1,4 @@
 ﻿
-using eventify_backend.Data;
 using eventify_backend.DTOs;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -118,6 +117,8 @@ namespace eventify_backend.Controllers
             try
             {
                 var categoriesWithRequestToDelete = await _serviceService.GetCategoriesWithRequestToDeleteAsync();
+                if (categoriesWithRequestToDelete == null)
+                    return NotFound("not found");
 
                 return Ok(categoriesWithRequestToDelete);
             }
@@ -134,6 +135,8 @@ namespace eventify_backend.Controllers
             try
             {
                 var services = await _serviceService.GetServicesWithRequestToDeleteAsync(categoryId);
+                if (services == null)
+                    return NotFound("not found");
 
                 return Ok(services);
             }
@@ -151,6 +154,10 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.ChangeDeleteRequestStateAsync(Id);
+
+                if (result == null)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -167,6 +174,10 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.ApproveVendorDeleteRequestAsync(Id);
+
+                if (result == null)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -183,6 +194,10 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetAllServiceCategoriesOfVendorAsync(Id);
+
+                if (result == null)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -199,6 +214,9 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.RequestToDeleteAsync(SORId);
+                if (result == 0)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -231,6 +249,12 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetServiceCategoriesOfBookedServicesAsync(Id);
+
+                if (result == null)
+                {
+                    return NotFound("not found");
+                }
+
                 return Ok(result);
             }
 
@@ -247,6 +271,9 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetBookedServicesOfVendorAsync(categoryId, vendorId);
+                if (result == null)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
             catch (Exception ex)
@@ -262,6 +289,10 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetCategoriesOfBookingRequestAsync(vendorId);
+                if (result == null)
+                    return NotFound("not found");
+
+
                 return Ok(result);
             }
 
@@ -278,6 +309,9 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetServicesOfBookingRequestAsync(categoryId, vendorId);
+                if(result == null)
+                    return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -294,6 +328,8 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.BookServiceByVendorAsync(eventId, soRId);
+                if (!result) return NotFound("not found");
+
                 return Ok(result);
             }
 
@@ -310,6 +346,10 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.RejectServiceFromVendorAsync(eventId, soRId);
+
+                if (!result) return NotFound("not found");
+
+
                 return Ok(result);
             }
 

@@ -202,6 +202,7 @@ C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\MySqlConnector.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Pomelo.EntityFrameworkCore.MySql.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\System.CodeDom.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.csproj.AssemblyReference.cache
@@ -225,4 +226,3 @@ C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.pdb
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.genruntimeconfig.cache
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\ref\eventify-backend.dll
-C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Newtonsoft.Json.dll

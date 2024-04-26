@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240330203506_Initial Migration")]
-    partial class InitialMigration
+    [Migration("20240426073904_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -102,7 +102,7 @@ namespace eventifybackend.Migrations
                     b.Property<int>("SoRId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsRequest")
+                    b.Property<bool>("IsApprove")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTime>("TimeStamp")

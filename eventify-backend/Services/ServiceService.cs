@@ -111,11 +111,25 @@ namespace eventify_backend.Services
                 if (service == null)
                     return null;
 
+                // Find all PId values associated with the given SoRId
+                var pIdsToDelete = _appDbContext.VendorSRPrices
+                    .Where(vp => vp.SoRId == service.SoRId)
+                    .Select(vp => vp.PId)
+                    .ToList();
+
+                if (pIdsToDelete != null)
+                {
+                    // Remove all entries from the Price table with PIds found above
+                    var pricesToDelete = _appDbContext.Prices.Where(p => pIdsToDelete.Contains(p.Pid));
+                    _appDbContext.Prices.RemoveRange(pricesToDelete);
+                }
+
                 var deletedCategoryId = service.ServiceCategoryId;
                 _appDbContext.Services.Remove(service);               // Remove the service from the databas
+
                 await _appDbContext.SaveChangesAsync();
 
-                return deletedCategoryId;
+                return deletedCategoryId; // return category id of deleted service
             }
             catch (Exception ex)
             {
@@ -205,6 +219,20 @@ namespace eventify_backend.Services
                 if (service == null)
                 {
                     return null;
+                }
+
+                // Find all PId values associated with the given SoRId
+                var pIdsToDelete = _appDbContext.VendorSRPrices
+                    .Where(vp => vp.SoRId == service.SoRId)
+                    .Select(vp => vp.PId)
+                    .ToList();
+
+
+                if (pIdsToDelete != null)
+                {
+                    // Remove all entries from the Price table with PIds found above
+                    var pricesToDelete = _appDbContext.Prices.Where(p => pIdsToDelete.Contains(p.Pid));
+                    _appDbContext.Prices.RemoveRange(pricesToDelete);
                 }
 
                 var deletedCategory = service.ServiceCategoryId; // Save the category ID before deletion
@@ -517,8 +545,13 @@ namespace eventify_backend.Services
                     IsRequestToDelete = false,
                     VendorId = vendorId,
                     ServiceCategoryId = json["serviceCategory"]?.Value<int>() ?? 0,
-                    Capacity = json["serviceMaxCapacity"]?.Value<int>() ?? 0,
                 };
+
+                if (json["serviceMaxCapacity"] != null && int.TryParse(json["serviceMaxCapacity"]?.ToString(), out int capacity))
+                {
+                    // Parsing successful, assign the parsed value to Capacity
+                    service.Capacity = capacity;
+                }
 
                 // Add service to the database
                 _appDbContext.Services.Add(service);
@@ -808,8 +841,15 @@ namespace eventify_backend.Services
                 service.Name = json["serviceName"]?.ToString();
                 service.Description = json["serviceDescription"]?.ToString();
                 service.ServiceCategoryId = json["serviceCategory"]?.Value<int>() ?? 0;
-                service.Capacity = json["serviceMaxCapacity"]?.Value<int>() ?? 0;
 
+                if (json["serviceMaxCapacity"] != null && int.TryParse(json["serviceMaxCapacity"]?.ToString(), out int capacity))
+                {
+                    // Parsing successful, assign the parsed value to Capacity
+                    service.Capacity = capacity;
+                } else
+                {
+                    service.Capacity = 0;
+                }
                 // Clear existing related entities
                 // Remove all entries related to features and facilities of the service
                 if (service.FeaturesAndFacilities != null)
