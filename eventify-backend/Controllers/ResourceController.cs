@@ -69,5 +69,40 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpPut("/api/[Controller]/{SoRId}")]
+        public async Task<IActionResult> ChangeSuspendState([FromRoute] int SORId)
+        {
+            try
+            {
+                var categoryId = await _resourceService.ChangeSuspendStateAsync(SORId);
+                if (categoryId == null)
+                    return NotFound();
+
+                return Ok(categoryId);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpDelete("/api/[Controller]/{Id}")]
+        public async Task<IActionResult> DeleteResource([FromRoute] int Id)
+        {
+            try
+            {
+                var deletedCategoryId = await _resourceService.DeleteResourceAsync(Id);
+                if (deletedCategoryId == null)
+                    return NotFound("Resource not found.");
+
+                return Ok(deletedCategoryId);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

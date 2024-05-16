@@ -125,7 +125,7 @@ namespace eventify_backend.Services
                 }
 
                 var deletedCategoryId = service.ServiceCategoryId;
-                _appDbContext.Services.Remove(service);               // Remove the service from the databas
+                _appDbContext.Services.Remove(service);               // Remove the service from the database
 
                 await _appDbContext.SaveChangesAsync();
 
