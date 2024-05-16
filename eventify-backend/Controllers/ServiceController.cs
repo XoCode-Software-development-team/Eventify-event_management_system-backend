@@ -111,7 +111,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/deleteRequestServices")]
+        [HttpGet("/api/[controller]/deleteRequest")]
         public async Task<IActionResult> GetCategoriesWithRequestToDelete()
         {
             try
@@ -129,7 +129,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/deleteRequestServices/{categoryId}")]
+        [HttpGet("/api/[controller]/deleteRequest/{categoryId}")]
         public async Task<IActionResult> DeleteRequestServices([FromRoute] int categoryId)
         {
             try
@@ -148,7 +148,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpPut("/api/deleteRequestServices/{Id}")]
+        [HttpPut("/api/[controller]/deleteRequest/change/{Id}")]
         public async Task<IActionResult> ChangeDeleteRequestState([FromRoute] int Id)
         {
             try
@@ -168,7 +168,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpDelete("/api/deleteRequestServices/{Id}")]
+        [HttpDelete("/api/[controller]/deleteRequestApprove/{Id}")]
         public async Task<IActionResult> ApproveVendorDeleteRequest([FromRoute] int Id)
         {
             try
@@ -283,7 +283,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/bookingRequest/{vendorId}")]
+        [HttpGet("/api/bookingRequestService/{vendorId}")]
         public async Task<IActionResult> GetCategoriesOfBookingRequest(Guid vendorId)
         {
             try
@@ -303,7 +303,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/bookingRequest/{categoryId}/{vendorId}")]
+        [HttpGet("/api/bookingRequestService/{categoryId}/{vendorId}")]
         public async Task<IActionResult> GetServicesOfBookingRequest(int categoryId, Guid vendorId)
         {
             try
@@ -322,7 +322,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpPut("/api/bookingRequestApprove/{eventId}/{soRId}")]
+        [HttpPut("/api/bookingRequestApproveService/{eventId}/{soRId}")]
         public async Task<IActionResult> BookServiceByVendor([FromRoute] int eventId, int soRId)
         {
             try
@@ -340,7 +340,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpPut("/api/bookingRequestReject/{eventId}/{soRId}")]
+        [HttpPut("/api/bookingRequestRejectService/{eventId}/{soRId}")]
         public async Task<IActionResult> RejectServiceFromVendor([FromRoute] int eventId, int soRId)
         {
             try
