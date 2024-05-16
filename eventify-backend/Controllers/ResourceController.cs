@@ -178,5 +178,59 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpGet("/api/[Controller]/categories/{Id}")]
+        public async Task<IActionResult> GetAllResourceCategoriesOfVendor(Guid Id)
+        {
+            try
+            {
+                var result = await _resourceService.GetAllResourceCategoriesOfVendorAsync(Id);
+
+                if (result == null)
+                    return NotFound("not found");
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/api/vendorResource/{categoryId}/{vendorId}")]
+        public async Task<IActionResult> GetVendorResourceByCategory([FromRoute] int categoryId, Guid vendorId)
+        {
+            try
+            {
+                var result = await _resourceService.GetVendorResourceByCategoryAsync(categoryId, vendorId);
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/api/[Controller]/deleteRequest/{SoRId}")]
+        public async Task<IActionResult> RequestToDelete([FromRoute] int SORId)
+        {
+            try
+            {
+                var result = await _resourceService.RequestToDeleteAsync(SORId);
+                if (result == 0)
+                    return NotFound("not found");
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+
     }
 }

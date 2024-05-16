@@ -239,6 +239,81 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<List<ResourceCategoryDTO>> GetAllResourceCategoriesOfVendorAsync(Guid Id)
+        {
+            try
+            {
+                var categories = await _appDbContext.ResourceCategories
+                    .Where(sc => sc.Resources != null && sc.Resources.Any(s => s.VendorId == Id))
+                    .Select(x => new ResourceCategoryDTO { CategoryId = x.CategoryId, ResourceCategoryName = x.ResourceCategoryName })
+                    .ToListAsync();
+
+                return categories;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while retrieving resource categories associated with the vendor.", ex);
+            }
+        }
+
+        public async Task<object> GetVendorResourceByCategoryAsync(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                // Retrieve the resource category and vendor
+
+                var resourceCategory = _appDbContext.ResourceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
+                var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
+
+                if (resourceCategory == null || vendor == null)
+                {
+                    throw new Exception("Resource category or vendor not found.");
+                }
+
+                // Query to retrieve resources within the specified category and vendor
+
+                var resourcesWithCategories = await _appDbContext.Resources
+                    .Where(s => s.ResourceCategoryId == categoryId && s.VendorId == vendorId)
+                    .Select(s => new
+                    {
+                        SoRId = s.SoRId,
+                        Resource = s.Name,
+                        Rating = s.OverallRate,
+                        IsRequestToDelete = s.IsRequestToDelete,
+                    })
+                    .ToListAsync();
+
+                return resourcesWithCategories;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task<int> RequestToDeleteAsync(int SORId)
+        {
+            try
+            {
+                var resource = await _appDbContext.Resources.FindAsync(SORId);
+                if (resource == null)
+                {
+                    throw new Exception("Resource not found.");
+                }
+
+                // Toggle the IsRequestToDelete flag
+                resource.IsRequestToDelete = !resource.IsRequestToDelete;
+
+                await _appDbContext.SaveChangesAsync();
+
+                return resource.ResourceCategoryId;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
 
     }
 }
