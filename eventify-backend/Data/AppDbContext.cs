@@ -38,6 +38,12 @@ namespace eventify_backend.Data
 
         public DbSet<EventSoRApprove> EventSoRApproves { get; set; }
 
+        public DbSet<Resource> Resources { get; set; }
+
+        public DbSet<ResourceCategory> ResourceCategories { get; set; }
+
+        public DbSet<ResourceManual> ResourceManual { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FeatureAndFacility>()
@@ -93,6 +99,9 @@ namespace eventify_backend.Data
 
             modelBuilder.Entity<EventSoRApprove>()
               .HasKey(e => new { e.EventId, e.SoRId });
+
+            modelBuilder.Entity<ResourceManual>()
+                .HasKey(rm => new {rm.SoRId, rm.Manual });
         }
     }
 

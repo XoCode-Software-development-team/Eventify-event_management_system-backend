@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240426073904_Initial")]
-    partial class Initial
+    [Migration("20240516072010_Initial-Migration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -164,6 +164,36 @@ namespace eventifybackend.Migrations
                     b.HasKey("ModelId");
 
                     b.ToTable("PriceModels");
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.ResourceCategory", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResourceCategoryName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.HasKey("CategoryId");
+
+                    b.ToTable("ResourceCategories");
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.ResourceManual", b =>
+                {
+                    b.Property<int>("SoRId")
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    b.Property<string>("Manual")
+                        .HasColumnType("varchar(255)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("SoRId", "Manual");
+
+                    b.ToTable("ResourceManual");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
@@ -361,6 +391,18 @@ namespace eventifybackend.Migrations
                     b.ToTable("VendorSRVideo");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.Resource", b =>
+                {
+                    b.HasBaseType("eventify_backend.Models.ServiceAndResource");
+
+                    b.Property<int>("ResourceCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("ResourceCategoryId");
+
+                    b.HasDiscriminator().HasValue("Resource");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.Service", b =>
                 {
                     b.HasBaseType("eventify_backend.Models.ServiceAndResource");
@@ -486,6 +528,17 @@ namespace eventifybackend.Migrations
                     b.Navigation("PriceModel");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.ResourceManual", b =>
+                {
+                    b.HasOne("eventify_backend.Models.Resource", "Resource")
+                        .WithMany("ResourceManual")
+                        .HasForeignKey("SoRId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Resource");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
                 {
                     b.HasOne("eventify_backend.Models.Event", "Event")
@@ -560,6 +613,17 @@ namespace eventifybackend.Migrations
                     b.Navigation("ServiceAndResource");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.Resource", b =>
+                {
+                    b.HasOne("eventify_backend.Models.ResourceCategory", "ResourceCategory")
+                        .WithMany("Resources")
+                        .HasForeignKey("ResourceCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ResourceCategory");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.Service", b =>
                 {
                     b.HasOne("eventify_backend.Models.ServiceCategory", "ServiceCategory")
@@ -585,6 +649,11 @@ namespace eventifybackend.Migrations
                     b.Navigation("Price");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.ResourceCategory", b =>
+                {
+                    b.Navigation("Resources");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.ServiceAndResource", b =>
                 {
                     b.Navigation("EventSRs");
@@ -607,6 +676,11 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.ServiceCategory", b =>
                 {
                     b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.Resource", b =>
+                {
+                    b.Navigation("ResourceManual");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.Client", b =>

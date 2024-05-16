@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eventifybackend.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,6 +27,21 @@ namespace eventifybackend.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PriceModels", x => x.ModelId);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ResourceCategories",
+                columns: table => new
+                {
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ResourceCategoryName = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ResourceCategories", x => x.CategoryId);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -151,12 +166,19 @@ namespace eventifybackend.Migrations
                     VendorId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     Discriminator = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    ResourceCategoryId = table.Column<int>(type: "int", nullable: true),
                     Capacity = table.Column<int>(type: "int", nullable: true),
                     ServiceCategoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ServiceAndResources", x => x.SoRId);
+                    table.ForeignKey(
+                        name: "FK_ServiceAndResources_ResourceCategories_ResourceCategoryId",
+                        column: x => x.ResourceCategoryId,
+                        principalTable: "ResourceCategories",
+                        principalColumn: "CategoryId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ServiceAndResources_ServiceCategories_ServiceCategoryId",
                         column: x => x.ServiceCategoryId,
@@ -237,6 +259,26 @@ namespace eventifybackend.Migrations
                     table.PrimaryKey("PK_FeatureAndFacility", x => new { x.SoRId, x.FacilityName });
                     table.ForeignKey(
                         name: "FK_FeatureAndFacility_ServiceAndResources_SoRId",
+                        column: x => x.SoRId,
+                        principalTable: "ServiceAndResources",
+                        principalColumn: "SoRId",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ResourceManual",
+                columns: table => new
+                {
+                    SoRId = table.Column<int>(type: "int", nullable: false),
+                    Manual = table.Column<string>(type: "varchar(255)", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ResourceManual", x => new { x.SoRId, x.Manual });
+                    table.ForeignKey(
+                        name: "FK_ResourceManual_ServiceAndResources_SoRId",
                         column: x => x.SoRId,
                         principalTable: "ServiceAndResources",
                         principalColumn: "SoRId",
@@ -417,6 +459,11 @@ namespace eventifybackend.Migrations
                 column: "SoRId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ServiceAndResources_ResourceCategoryId",
+                table: "ServiceAndResources",
+                column: "ResourceCategoryId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ServiceAndResources_ServiceCategoryId",
                 table: "ServiceAndResources",
                 column: "ServiceCategoryId");
@@ -441,6 +488,9 @@ namespace eventifybackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "PriceVendorSRPrice");
+
+            migrationBuilder.DropTable(
+                name: "ResourceManual");
 
             migrationBuilder.DropTable(
                 name: "ReviewAndRatings");
@@ -468,6 +518,9 @@ namespace eventifybackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "ServiceAndResources");
+
+            migrationBuilder.DropTable(
+                name: "ResourceCategories");
 
             migrationBuilder.DropTable(
                 name: "ServiceCategories");

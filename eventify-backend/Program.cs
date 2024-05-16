@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServiceService>();
+builder.Services.AddScoped<ResourceService>();
 
 // Retrieve connection string from configuration.
 var connectionString = builder.Configuration.GetConnectionString("EventifyDbConnectionString");

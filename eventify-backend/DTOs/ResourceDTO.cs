@@ -1,15 +1,15 @@
 ﻿namespace eventify_backend.DTOs
 {
-    public class ServiceCategoryDTO
+    public class ResourceCategoryDTO
     {
         public int CategoryId { get; set; }
-        public string? ServiceCategoryName { get; set; }
+        public string? ResourceCategoryName { get; set; }
     }
 
-    public class ServiceDTO // For admin view
+    public class ResourceDTO // For admin view
     {
         public int SoRId { get; set; }
-        public string? Service { get; set; }
+        public string? Resource { get; set; }
         public float? Rating { get; set; }
         public bool IsSuspend { get; set; }
     }
