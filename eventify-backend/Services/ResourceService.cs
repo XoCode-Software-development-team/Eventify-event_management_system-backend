@@ -176,6 +176,30 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object?> ChangeDeleteRequestStateAsync(int soRId)
+        {
+            try
+            {
+                var resource = await _appDbContext.Resources.FindAsync(soRId); // Find resource by soRId
+                if (resource == null)
+                {
+                    return null;
+                }
+
+                resource.IsRequestToDelete = false; // Mark the resource as no longer needing deletion
+                await _appDbContext.SaveChangesAsync(); // Save changes to the database
+
+                // Calculate the remaining count of resources still requesting deletion
+                var remainingCount = await _appDbContext.Resources.CountAsync(s => s.ResourceCategoryId == resource.ResourceCategoryId && s.IsRequestToDelete);
+
+                return new { DeletedResourceCategoryId = resource.ResourceCategoryId, RemainingCount = remainingCount };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while changing delete request state of the resource.", ex);
+            }
+        }
+
 
     }
 }
