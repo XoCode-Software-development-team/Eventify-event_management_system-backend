@@ -159,5 +159,24 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpDelete("/api/[controller]/deleteRequestApprove/{Id}")]
+        public async Task<IActionResult> ApproveVendorDeleteRequest([FromRoute] int Id)
+        {
+            try
+            {
+                var result = await _resourceService.ApproveVendorDeleteRequestAsync(Id);
+
+                if (result == null)
+                    return NotFound("not found");
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
     }
 }

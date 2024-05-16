@@ -200,6 +200,45 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object?> ApproveVendorDeleteRequestAsync(int soRId)
+        {
+            try
+            {
+                var resource = await _appDbContext.Resources.FindAsync(soRId);
+                if (resource == null)
+                {
+                    return null;
+                }
+
+                // Find all PId values associated with the given SoRId
+                var pIdsToDelete = _appDbContext.VendorSRPrices
+                    .Where(vp => vp.SoRId == resource.SoRId)
+                    .Select(vp => vp.PId)
+                    .ToList();
+
+
+                if (pIdsToDelete != null)
+                {
+                    // Remove all entries from the Price table with PIds found above
+                    var pricesToDelete = _appDbContext.Prices.Where(p => pIdsToDelete.Contains(p.Pid));
+                    _appDbContext.Prices.RemoveRange(pricesToDelete);
+                }
+
+                var deletedCategory = resource.ResourceCategoryId; // Save the category ID before deletion
+                _appDbContext.Resources.Remove(resource); // Remove the resource from the database
+                await _appDbContext.SaveChangesAsync(); // Save changes to the database
+
+                // Calculate the remaining count of resources still requesting deletion
+                var remainingCount = await _appDbContext.Resources.CountAsync(s => s.ResourceCategoryId == deletedCategory && s.IsRequestToDelete);
+
+                return new { DeletedResourceCategoryId = resource.ResourceCategoryId, RemainingCount = remainingCount };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while approving vendor delete request for the resource.", ex);
+            }
+        }
+
 
     }
 }
