@@ -1,5 +1,6 @@
 ﻿using eventify_backend.Data;
 using eventify_backend.DTOs;
+using eventify_backend.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace eventify_backend.Services
@@ -126,6 +127,52 @@ namespace eventify_backend.Services
             catch (Exception ex)
             {
                 throw new Exception("An error occurred while deleting the resource.", ex);
+            }
+        }
+
+        public async Task<List<ResourceCategoryDTO>> GetCategoriesWithRequestToDeleteAsync()
+        {
+            try
+            {
+                // Query to join ResourceCategories with Resources flagged for deletion and select relevant data into ResourceCategoryDTO objects
+
+                var categoriesWithRequestToDelete = await _appDbContext.ResourceCategories
+                    .Join(_appDbContext.Resources.Where(s => s.IsRequestToDelete),
+                        category => category.CategoryId,
+                        resource => resource.ResourceCategoryId,
+                        (category, resource) => new ResourceCategoryDTO { CategoryId = category.CategoryId, ResourceCategoryName = category.ResourceCategoryName })
+                    .Distinct()
+                    .ToListAsync();
+
+                return categoriesWithRequestToDelete;         // Return the list of categories with resources flagged for deletion
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while retrieving categories with resources flagged for deletion.", ex);
+            }
+        }
+
+        public async Task<List<ResourceDTO>> GetResourcesWithRequestToDeleteAsync(int categoryId)
+        {
+            try
+            {
+                // Query to retrieve resources within the specified category with requests to delete
+
+                var resources = await _appDbContext.Resources
+                    .Where(s => s.ResourceCategoryId == categoryId && s.IsRequestToDelete)
+                    .Select(s => new ResourceDTO
+                    {
+                        SoRId = s.SoRId,
+                        Resource = s.Name,
+                        Rating = s.OverallRate,
+                    })
+                    .ToListAsync();
+
+                return resources;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while retrieving resources with requests to delete.", ex);
             }
         }
 

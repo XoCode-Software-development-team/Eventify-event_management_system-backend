@@ -104,5 +104,40 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+        [HttpGet("/api/[controller]/deleteRequest")]
+        public async Task<IActionResult> GetCategoriesWithRequestToDelete()
+        {
+            try
+            {
+                var categoriesWithRequestToDelete = await _resourceService.GetCategoriesWithRequestToDeleteAsync();
+                if (categoriesWithRequestToDelete == null)
+                    return NotFound("not found");
+
+                return Ok(categoriesWithRequestToDelete);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/api/[controller]/deleteRequest/{categoryId}")]
+        public async Task<IActionResult> DeleteRequestResources([FromRoute] int categoryId)
+        {
+            try
+            {
+                var resources = await _resourceService.GetResourcesWithRequestToDeleteAsync(categoryId);
+                if (resources == null)
+                    return NotFound("not found");
+
+                return Ok(resources);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
     }
 }
