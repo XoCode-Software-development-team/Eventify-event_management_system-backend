@@ -713,6 +713,73 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object> GetResourceDetailsForClientAsync(int soRId)
+        {
+            try
+            {
+                // Retrieve resource details for the specified resource ID
+                var resource = await _appDbContext.Resources
+                    .Where(s => s.SoRId == soRId)
+                    .Select(s => new
+                    {
+                        soRId = s.SoRId,
+                        name = s.Name,
+                        vendor = new
+                        {
+                            vendorId = s.VendorId,
+                            companyName = s.Vendor != null ? s.Vendor.CompanyName : null,
+                        },
+                        capacity = s.Capacity,
+                        serviceCategory = s.ResourceCategory,
+                        description = s.Description,
+                        reviewAndRating = s.ReviewAndRating != null ? s.ReviewAndRating
+                            .Where(rr => rr.SoRId == s.SoRId)
+                            .Select(rr => new
+                            {
+                                avatar = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.ProfilePic : null,
+                                fname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.FirstName : null,
+                                lname = rr.Event != null && rr.Event.Client != null ? rr.Event.Client.LastName : null,
+                                comment = rr.Comment,
+                                rate = rr.Ratings
+                            })
+                            .ToList() : null,
+                        featureAndFacility = s.FeaturesAndFacilities != null ? s.FeaturesAndFacilities.Select(ff => ff.FacilityName) : null,
+                        price = (
+                                    from vp in _appDbContext.VendorSRPrices
+                                    join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                    join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
+                                    where vp.SoRId == s.SoRId
+                                    select new
+                                    {
+                                        value = p.BasePrice,
+                                        model = pm.ModelName,
+                                        modelId = pm.ModelId,
+                                        name = p.Pname
+                                    }
+                                ).ToList(),
+                        location = s.VendorSRLocations != null ? s.VendorSRLocations.Select(vl => new
+                        {
+                            vl.HouseNo,
+                            vl.Area,
+                            vl.District,
+                            vl.Country,
+                            vl.State
+                        }).ToList() : null,
+                        images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image) : null,
+                        videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
+                    })
+                    .ToListAsync();
+
+                return resource;
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred whiel getting resource details", ex);
+            }
+
+        }
+
 
     }
 }

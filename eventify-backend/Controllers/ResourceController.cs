@@ -388,6 +388,21 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/[Controller]/details/{soRId}")]
+        public async Task<IActionResult> GetResourceDetailsForClient(int soRId)
+        {
+            try
+            {
+                var result = await _resourceService.GetResourceDetailsForClientAsync(soRId);
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }
