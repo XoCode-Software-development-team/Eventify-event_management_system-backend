@@ -730,7 +730,7 @@ namespace eventify_backend.Services
                             companyName = s.Vendor != null ? s.Vendor.CompanyName : null,
                         },
                         capacity = s.Capacity,
-                        serviceCategory = s.ResourceCategory,
+                        resourceCategory = s.ResourceCategory,
                         description = s.Description,
                         reviewAndRating = s.ReviewAndRating != null ? s.ReviewAndRating
                             .Where(rr => rr.SoRId == s.SoRId)
@@ -780,6 +780,183 @@ namespace eventify_backend.Services
 
         }
 
+        public async Task UpdateResourceAsync(Guid vendorId, int soRId, object data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    throw new ArgumentNullException(nameof(data), "No data provided.");
+                }
+
+                string jsonString = data?.ToString() ?? string.Empty;
+
+                JObject json = JObject.Parse(jsonString);
+
+                var resource = await _appDbContext.Resources
+                    .Include(s => s.FeaturesAndFacilities)
+                    .Include(s => s.VendorSRPrices)
+                    .Include(s => s.VendorSRLocations)
+                    .Include(s => s.VendorRSPhotos)
+                    .Include(s => s.VendorRSVideos)
+                    .FirstOrDefaultAsync(s => s.SoRId == soRId && s.VendorId == vendorId);
+
+                if (resource == null)
+                {
+                    throw new ArgumentException("Resource not found.");
+                }
+
+                // Update resource properties with data
+                resource.Name = json["resourceName"]?.ToString();
+                resource.Description = json["resourceDescription"]?.ToString();
+                resource.ResourceCategoryId = json["resourceCategory"]?.Value<int>() ?? 0;
+
+                if (json["resourceMaxCapacity"] != null && int.TryParse(json["resourceMaxCapacity"]?.ToString(), out int capacity))
+                {
+                    // Parsing successful, assign the parsed value to Capacity
+                    resource.Capacity = capacity;
+                }
+                else
+                {
+                    resource.Capacity = 0;
+                }
+                // Clear existing related entities
+                // Remove all entries related to features and facilities of the resource
+                if (resource.FeaturesAndFacilities != null)
+                {
+                    _appDbContext.FeatureAndFacility.RemoveRange(resource.FeaturesAndFacilities);
+
+                    var featureAndFacility = json["resourceFeatures"] as JArray;
+
+                    if (featureAndFacility != null)
+                    {
+                        foreach (var item in featureAndFacility)
+                        {
+                            var featureOrFacility = new FeatureAndFacility
+                            {
+                                FacilityName = item["name"]?.ToString(),
+                                SoRId = resource.SoRId
+                            };
+                            resource.FeaturesAndFacilities.Add(featureOrFacility);
+                        }
+                    }
+                }
+
+                // Remove all price entries related to the resource
+                if (resource.VendorSRPrices != null)
+                {
+                    _appDbContext.VendorSRPrices.RemoveRange(resource.VendorSRPrices);
+
+                    var price = json["resourcePricePackages"] as JArray;
+                    if (price != null)
+                    {
+                        foreach (var item in price)
+                        {
+                            var resourcePrice = new Price
+                            {
+                                Pname = item["packageName"]?.ToString(),
+                                BasePrice = item["basePrice"]?.Value<double>() ?? 0,
+                                ModelId = item["priceModel"]?.Value<int>() ?? 0
+                            };
+
+                            await _appDbContext.Prices.AddAsync(resourcePrice);
+                            await _appDbContext.SaveChangesAsync();
+
+                            var vendorSRPrice = new VendorSRPrice
+                            {
+                                SoRId = resource.SoRId,
+                                PId = resourcePrice.Pid
+                            };
+
+                            resource.VendorSRPrices.Add(vendorSRPrice);
+                        }
+                    }
+                }
+
+                // Remove all location entries related to the resource
+                if (resource.VendorSRLocations != null)
+                {
+                    _appDbContext.VendorSRLocation.RemoveRange(resource.VendorSRLocations);
+
+                    var location = json["resourceLocations"] as JArray;
+                    if (location != null)
+                    {
+                        foreach (var item in location)
+                        {
+                            var vendorSRLocation = new VendorSRLocation
+                            {
+                                SoRId = resource.SoRId,
+                                HouseNo = item["houseNoStreetRoad"]?.ToString(),
+                                Area = item["cityTownArea"]?.ToString(),
+                                District = item["district"]?.ToString(),
+                                Country = item["country"]?.ToString(),
+                                State = item["stateProvinceRegion"]?.ToString(),
+                            };
+
+                            resource.VendorSRLocations.Add(vendorSRLocation);
+                        }
+                    }
+                }
+
+                // Remove all photo entries related to the resource
+                if (resource.VendorRSPhotos != null)
+                {
+                    _appDbContext.VendorSRPhoto.RemoveRange(resource.VendorRSPhotos);
+
+                    var images = json["images"] as JArray;
+                    if (images != null)
+                    {
+                        foreach (var image in images)
+                        {
+                            var vendorSRPhoto = new VendorSRPhoto
+                            {
+                                SoRId = resource.SoRId,
+                                Image = image.ToString()
+                            };
+
+                            resource.VendorRSPhotos.Add(vendorSRPhoto);
+                        }
+                    }
+                }
+
+                // Remove all video entries related to the resource
+                if (resource.VendorRSVideos != null)
+                {
+                    _appDbContext.VendorSRVideo.RemoveRange(resource.VendorRSVideos);
+
+                    var videos = json["videos"] as JArray;
+                    if (videos != null)
+                    {
+                        foreach (var video in videos)
+                        {
+                            var vendorSRVideo = new VendorSRVideo
+                            {
+                                SoRId = resource.SoRId,
+                                Video = video.ToString()
+                            };
+
+                            resource.VendorRSVideos.Add(vendorSRVideo);
+                        }
+                    }
+                }
+
+
+                // Save changes to the database
+                await _appDbContext.SaveChangesAsync();
+            }
+            catch (ArgumentNullException)
+            {
+                throw; // Rethrow to maintain original behavior
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException("Invalid JSON format.", nameof(data), ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred.", ex);
+            }
+        }
 
     }
 }

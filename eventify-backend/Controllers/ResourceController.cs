@@ -403,6 +403,21 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpPut("/api/[Controller]/update/{vendorId}/{soRId}")]
+        public async Task<IActionResult> UpdateResource([FromRoute] Guid vendorId, int soRId, [FromBody] object data)
+        {
+            try
+            {
+                await _resourceService.UpdateResourceAsync(vendorId, soRId, data);
+                return Ok();
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }
