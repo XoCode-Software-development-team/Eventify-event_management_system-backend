@@ -269,6 +269,79 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/bookingRequestResource/{vendorId}")]
+        public async Task<IActionResult> GetCategoriesOfBookingRequest(Guid vendorId)
+        {
+            try
+            {
+                var result = await _resourceService.GetCategoriesOfBookingRequestAsync(vendorId);
+                if (result == null)
+                    return NotFound("not found");
+
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/api/bookingRequestResource/{categoryId}/{vendorId}")]
+        public async Task<IActionResult> GetResourcesOfBookingRequest(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                var result = await _resourceService.GetResourcesOfBookingRequestAsync(categoryId, vendorId);
+                if (result == null)
+                    return NotFound("not found");
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/api/bookingRequestApproveResource/{eventId}/{soRId}")]
+        public async Task<IActionResult> BookResourceByVendor([FromRoute] int eventId, int soRId)
+        {
+            try
+            {
+                var result = await _resourceService.BookResourceByVendorAsync(eventId, soRId);
+                if (!result) return NotFound("not found");
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut("/api/bookingRequestRejectResource/{eventId}/{soRId}")]
+        public async Task<IActionResult> RejectResourceFromVendor([FromRoute] int eventId, int soRId)
+        {
+            try
+            {
+                var result = await _resourceService.RejectResourceFromVendorAsync(eventId, soRId);
+
+                if (!result) return NotFound("not found");
+
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

@@ -426,17 +426,19 @@ namespace eventify_backend.Services
                 var services = await _appDbContext.Services
                     .Where(s => s.ServiceCategoryId == categoryId &&
                                 s.VendorId == vendorId &&
-                                s.EventSoRApproves != null &&
+                                s.EventSoRApproves != null && // Explicit null check for EventSoRApproves
                                 s.EventSoRApproves.Any(e => e.IsApprove == false))
-                    .Select(x => new
-                    {
-                        SoRId = x.SoRId,
-                        EventId = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.EventId) : null,
-                        Service = x.Name,
-                        EventName = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event != null ? e.Event.Name : null) : null,
-                        EventDate = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null,
-                        EndDate = x.EventSoRApproves != null ? x.EventSoRApproves.Select(e => e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null
-                    })
+                    .SelectMany(s => s.EventSoRApproves!
+                        .Where(e => e.IsApprove == false)
+                        .Select(e => new
+                        {
+                            SoRId = s.SoRId,
+                            EventId = e.EventId,
+                            Service = s.Name,
+                            EventName = e.Event != null ? e.Event.Name : null,
+                            EventDate = e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd"),
+                            EndDate = e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")
+                        }))
                     .ToListAsync();
 
                 return services;

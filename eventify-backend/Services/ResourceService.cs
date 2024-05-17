@@ -370,6 +370,125 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object> GetCategoriesOfBookingRequestAsync(Guid vendorId)
+        {
+            try
+            {
+                // Query to retrieve categories of booking requests for the vendor
+                var categories = await _appDbContext.ResourceCategories
+                    .Where(sc => sc.Resources != null && sc.Resources.Any(s => s.EventSoRApproves != null && s.VendorId == vendorId && s.EventSoRApproves
+                        .Any(esra => esra.IsApprove == false)))
+                    .Select(x => new { x.CategoryId, x.ResourceCategoryName })
+                    .ToListAsync();
+
+                return categories;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task<object?> GetResourcesOfBookingRequestAsync(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                // Retrieve the resource category and vendor
+                var resourceCategory = _appDbContext.ResourceCategories.FirstOrDefault(sc => sc.CategoryId == categoryId);
+                var vendor = _appDbContext.Vendors.FirstOrDefault(v => v.UserId == vendorId);
+
+                if (resourceCategory == null || vendor == null)
+                {
+                    return false;
+                }
+
+                var currentDate = DateTime.Now;
+
+                // Query to retrieve resources with booking requests for the specified category and vendor
+                var resources = await _appDbContext.Resources
+                    .Where(s => s.ResourceCategoryId == categoryId &&
+                                s.VendorId == vendorId &&
+                                s.EventSoRApproves != null && // Explicit null check for EventSoRApproves
+                                s.EventSoRApproves.Any(e => e.IsApprove == false))
+                    .SelectMany(s => s.EventSoRApproves!
+                        .Where(e => e.IsApprove == false)
+                        .Select(e => new
+                        {
+                            SoRId = s.SoRId,
+                            EventId = e.EventId,
+                            Resource = s.Name,
+                            EventName = e.Event != null ? e.Event.Name : null,
+                            EventDate = e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd"),
+                            EndDate = e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")
+                        }))
+                    .ToListAsync();
+
+
+
+                return resources;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task<bool> BookResourceByVendorAsync(int eventId, int soRId)
+        {
+            try
+            {
+                // Find the event-SOR approval record
+                var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
+                if (eventSorToApprove == null)
+                {
+                    return false;
+                }
+
+                eventSorToApprove.IsApprove = true;
+
+                // Create a new event-SR record
+                var eventSR = new EventSR
+                {
+                    Id = eventId,
+                    SORId = soRId,
+                };
+
+                // Add the new event-SR record to the context
+                await _appDbContext.EventSr.AddAsync(eventSR);
+                //_appDbContext.EventSoRApproves.Remove(eventSorToApprove);
+                await _appDbContext.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task<bool> RejectResourceFromVendorAsync(int eventId, int soRId)
+        {
+            try
+            {
+                // Find the event-SOR approval record
+                var eventSorToApprove = await _appDbContext.EventSoRApproves.FindAsync(eventId, soRId);
+                if (eventSorToApprove == null)
+                {
+                    return false;
+                }
+
+                eventSorToApprove.IsApprove = !eventSorToApprove.IsApprove;    // Toggle the approval status
+
+                await _appDbContext.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
 
     }
 }
