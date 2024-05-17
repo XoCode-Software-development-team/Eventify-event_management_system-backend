@@ -15,6 +15,7 @@ namespace eventify_backend.Models
         public bool IsRequestToDelete { get; set; }
 
         public float? OverallRate { get; set; }
+        public int Capacity { get; set; }
 
         [ForeignKey("Vendor")]
         public Guid VendorId { get; set; }

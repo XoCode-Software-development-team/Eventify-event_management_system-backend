@@ -2,6 +2,8 @@
 using eventify_backend.DTOs;
 using eventify_backend.Models;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace eventify_backend.Services
 {
@@ -486,6 +488,164 @@ namespace eventify_backend.Services
             catch (Exception ex)
             {
                 throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task AddNewResourceAsync(Guid vendorId, object data)
+        {
+            try
+            {
+                if (data == null)
+                {
+                    throw new ArgumentNullException(nameof(data), "No data provided.");
+                }
+
+                string jsonString = data?.ToString() ?? string.Empty;         // Convert data to JSON string
+
+                JObject json = JObject.Parse(jsonString);         // Parse JSON string to JObject
+
+
+                // Create new Resource object
+                var resource = new Resource
+                {
+                    Name = json["resourceName"]?.ToString(),
+                    Description = json["resourceDescription"]?.ToString(),
+                    IsSuspend = false,
+                    IsRequestToDelete = false,
+                    VendorId = vendorId,
+                    ResourceCategoryId = json["resourceCategory"]?.Value<int>() ?? 0,
+                };
+
+                if (json["resourceMaxCapacity"] != null && int.TryParse(json["resourceMaxCapacity"]?.ToString(), out int capacity))
+                {
+                    // Parsing successful, assign the parsed value to Capacity
+                    resource.Capacity = capacity;
+                }
+
+                // Add resource to the database
+                _appDbContext.Resources.Add(resource);
+
+                await _appDbContext.SaveChangesAsync();   // Save changes to the database
+
+
+                // Handle feature and facility
+                var featureAndFacility = json["resourceFeatures"] as JArray;// Extract feature and facility information from the JSON data
+                if (featureAndFacility != null)
+                {
+                    foreach (var item in featureAndFacility)
+                    {
+                        // Create a new FeatureAndFacility object
+                        var featureOrFacility = new FeatureAndFacility
+                        {
+                            FacilityName = item["name"]?.ToString(),
+                            SoRId = resource.SoRId
+                        };
+                        _appDbContext.FeatureAndFacility.Add(featureOrFacility);
+                    }
+                }
+
+                var location = json["resourceLocations"] as JArray; // Extract location information from the JSON data
+
+                if (location != null)
+                {
+                    foreach (var item in location)
+                    {
+                        var vendorSRLocation = new VendorSRLocation   // Create a new VendorSRLocation object
+                        {
+                            SoRId = resource.SoRId,
+                            HouseNo = item["houseNoStreetRoad"]?.ToString(),
+                            Area = item["cityTownArea"]?.ToString(),
+                            District = item["district"]?.ToString(),
+                            Country = item["country"]?.ToString(),
+                            State = item["stateProvinceRegion"]?.ToString(),
+                        };
+
+                        // Add the location to the database context
+                        _appDbContext.VendorSRLocation.Add(vendorSRLocation);
+
+                    }
+                }
+
+                var price = json["resourcePricePackages"] as JArray;// Extract price information from the JSON data
+
+                if (price != null)
+                {
+                    // Iterate over each price package item
+                    foreach (var item in price)
+                    {
+                        var resourcePrice = new Price
+                        {
+                            Pname = item["packageName"]?.ToString(),
+                            BasePrice = item["basePrice"]?.Value<double>() ?? 0,
+                            ModelId = item["priceModel"]?.Value<int>() ?? 0
+                        };
+
+                        // Add the price to the database context
+                        _appDbContext.Prices.Add(resourcePrice);
+                        await _appDbContext.SaveChangesAsync();
+
+
+                        var vendorSRPrice = new VendorSRPrice   // Create a new VendorSRPrice object
+                        {
+                            SoRId = resource.SoRId,
+                            PId = resourcePrice.Pid
+                        };
+
+                        // Add the vendor resource price to the database context
+                        _appDbContext.VendorSRPrices.Add(vendorSRPrice);
+                    }
+                }
+
+                // Extract image information from the JSON data
+                var images = json["images"] as JArray;
+
+                if (images != null)
+                {
+                    foreach (var image in images)
+                    {
+                        // Create a new VendorSRPhoto object
+                        var vendorSRPhoto = new VendorSRPhoto
+                        {
+                            SoRId = resource.SoRId,
+                            Image = image.ToString()
+                        };
+
+                        _appDbContext.VendorSRPhoto.Add(vendorSRPhoto);
+                    }
+                }
+
+                // Extract video information from the JSON data
+                var videos = json["videos"] as JArray;
+
+                if (videos != null)
+                {
+                    foreach (var video in videos)
+                    {
+                        var vendorSRVideo = new VendorSRVideo
+                        {
+                            SoRId = resource.SoRId,
+                            Video = video.ToString()
+                        };
+
+                        // Add the video to the database context
+                        _appDbContext.VendorSRVideo.Add(vendorSRVideo);
+                    }
+                }
+
+                // Similar handling for other entities
+                await _appDbContext.SaveChangesAsync();
+            }
+            catch (ArgumentNullException)
+            {
+                throw; // Rethrow to maintain original behavior
+            }
+            catch (JsonException ex)
+            {
+                throw new ArgumentException("Invalid JSON format.", nameof(data), ex);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred.", ex);
             }
         }
 

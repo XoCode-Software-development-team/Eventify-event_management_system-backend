@@ -342,6 +342,21 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpPost("/api/[Controller]/addNew/{vendorId}")]
+        public async Task<IActionResult> AddNewResource([FromRoute] Guid vendorId, [FromBody] object data)
+        {
+            try
+            {
+                await _resourceService.AddNewResourceAsync(vendorId, data);
+                return Ok();
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

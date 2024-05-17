@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eventifybackend.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialMigration : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -163,11 +163,11 @@ namespace eventifybackend.Migrations
                     IsSuspend = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     IsRequestToDelete = table.Column<bool>(type: "tinyint(1)", nullable: false),
                     OverallRate = table.Column<float>(type: "float", nullable: true),
+                    Capacity = table.Column<int>(type: "int", nullable: false),
                     VendorId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     Discriminator = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ResourceCategoryId = table.Column<int>(type: "int", nullable: true),
-                    Capacity = table.Column<int>(type: "int", nullable: true),
                     ServiceCategoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>

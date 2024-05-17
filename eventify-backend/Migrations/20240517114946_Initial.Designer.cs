@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240516072010_Initial-Migration")]
-    partial class InitialMigration
+    [Migration("20240517114946_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,6 +226,9 @@ namespace eventifybackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
@@ -406,9 +409,6 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.Service", b =>
                 {
                     b.HasBaseType("eventify_backend.Models.ServiceAndResource");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
 
                     b.Property<int>("ServiceCategoryId")
                         .HasColumnType("int");

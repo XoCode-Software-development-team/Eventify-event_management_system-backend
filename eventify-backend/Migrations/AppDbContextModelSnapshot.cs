@@ -223,6 +223,9 @@ namespace eventifybackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
@@ -403,9 +406,6 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.Service", b =>
                 {
                     b.HasBaseType("eventify_backend.Models.ServiceAndResource");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
 
                     b.Property<int>("ServiceCategoryId")
                         .HasColumnType("int");
