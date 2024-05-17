@@ -314,6 +314,62 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object> GetResourceCategoriesOfBookedResourcesAsync(Guid Id)
+        {
+            try
+            {
+                // Get the current date and time
+
+                var currentDate = DateTime.Now;
+
+                // Query to retrieve resource categories of booked resources for the specified vendor
+                var categories = await _appDbContext.ResourceCategories
+                    .Where(sc => sc.Resources != null && sc.Resources.Any(s => s.EventSRs != null &&
+                        s.EventSRs.Any(esr => esr.Event != null && esr.ServiceAndResource != null &&
+                            esr.Event.EndDateTime > currentDate && esr.ServiceAndResource.VendorId == Id)))
+                    .Select(x => new { x.CategoryId, x.ResourceCategoryName })
+                    .ToListAsync();
+
+                return categories;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
+        public async Task<object> GetBookedResourcesOfVendorAsync(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                // Get the current date and time
+                var currentDate = DateTime.Now;
+
+                // Query to retrieve booked resources of the vendor for the specified resource category
+                var resources = await _appDbContext.Resources
+                    .Where(s => s.ResourceCategoryId == categoryId &&
+                                s.VendorId == vendorId &&
+                                s.EventSRs != null &&
+                                s.EventSRs.Any(e => e.Event != null && e.Event.EndDateTime > currentDate))
+                    .SelectMany(s => s.EventSRs!
+                        .Where(e => e.Event != null && e.Event.EndDateTime > currentDate)
+                        .Select(e => new
+                        {
+                            SoRId = s.SoRId,
+                            Resource = s.Name,
+                            EventDate = e.Event!.StartDateTime.Date.ToString("yyyy-MM-dd"),
+                            EndDate = e.Event.EndDateTime.Date.ToString("yyyy-MM-dd")
+                        }))
+                    .ToListAsync();
+
+                return resources;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
+
 
     }
 }

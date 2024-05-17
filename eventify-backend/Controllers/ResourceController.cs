@@ -231,6 +231,44 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/bookedResource/Categories/{Id}")]
+        public async Task<IActionResult> GetResourceCategoriesOfBookedResources(Guid Id)
+        {
+            try
+            {
+                var result = await _resourceService.GetResourceCategoriesOfBookedResourcesAsync(Id);
+
+                if (result == null)
+                {
+                    return NotFound("not found");
+                }
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet("/api/bookedResource/{categoryId}/{vendorId}")]
+        public async Task<IActionResult> GetBookedResourcesOfVendor(int categoryId, Guid vendorId)
+        {
+            try
+            {
+                var result = await _resourceService.GetBookedResourcesOfVendorAsync(categoryId, vendorId);
+                if (result == null)
+                    return NotFound("not found");
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

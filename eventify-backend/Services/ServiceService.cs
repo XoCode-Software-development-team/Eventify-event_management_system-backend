@@ -367,13 +367,15 @@ namespace eventify_backend.Services
                                 s.VendorId == vendorId &&
                                 s.EventSRs != null &&
                                 s.EventSRs.Any(e => e.Event != null && e.Event.EndDateTime > currentDate))
-                    .Select(x => new
-                    {
-                        SoRId = x.SoRId,
-                        Service = x.Name,
-                        EventDate = x.EventSRs != null ? x.EventSRs.Select(e => e.Event != null ? e.Event.StartDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null,
-                        EndDate = x.EventSRs != null ? x.EventSRs.Select(e => e.Event != null ? e.Event.EndDateTime.Date.ToString("yyyy-MM-dd") : DateTime.MinValue.ToString("yyyy-MM-dd")).ToList() : null
-                    })
+                    .SelectMany(s => s.EventSRs!
+                        .Where(e => e.Event != null && e.Event.EndDateTime > currentDate)
+                        .Select(e => new
+                        {
+                            SoRId = s.SoRId,
+                            Service = s.Name,
+                            EventDate = e.Event!.StartDateTime.Date.ToString("yyyy-MM-dd"),
+                            EndDate = e.Event.EndDateTime.Date.ToString("yyyy-MM-dd")
+                        }))
                     .ToListAsync();
 
                 return services;
