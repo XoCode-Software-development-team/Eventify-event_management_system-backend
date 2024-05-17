@@ -357,6 +357,37 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/[Controller]/maxPrice/{modelId}")]
+        public async Task<IActionResult> GetMaxPriceOfResource(int modelId)
+        {
+            try
+            {
+                var result = await _resourceService.GetMaxPriceOfResourceAsync(modelId);
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+        [HttpGet("/api/[Controller]/all")]
+        public async Task<IActionResult> GetResourcesForClients()
+        {
+            try
+            {
+                var result = await _resourceService.GetResourcesForClientsAsync();
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

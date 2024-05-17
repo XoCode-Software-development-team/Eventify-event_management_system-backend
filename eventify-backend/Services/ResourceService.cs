@@ -649,6 +649,70 @@ namespace eventify_backend.Services
             }
         }
 
+        public async Task<object> GetMaxPriceOfResourceAsync(int modelId)
+        {
+            try
+            {
+                // Retrieve the maximum resource price for the specified model ID
+                var maxResourcePrice = await (
+                    from resource in _appDbContext.Resources
+                    join vendorSRPrice in _appDbContext.VendorSRPrices on resource.SoRId equals vendorSRPrice.SoRId
+                    join price in _appDbContext.Prices on vendorSRPrice.PId equals price.Pid
+                    where price.ModelId == modelId
+                    select price.BasePrice
+                ).MaxAsync();
+
+                return maxResourcePrice;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while getting max price.", ex);
+            }
+        }
+
+        public async Task<object> GetResourcesForClientsAsync()
+        {
+            try
+            {
+                // Retrieve resources for clients that are not suspended
+                var resources = await _appDbContext.Resources
+                    .Where(s => s.IsSuspend == false)
+                    .Select(s => new
+                    {
+                        soRId = s.SoRId,
+                        name = s.Name,
+                        categoryId = s.ResourceCategoryId,
+                        rating = new
+                        {
+                            rate = s.OverallRate,
+                            count = s.ReviewAndRating != null ? s.ReviewAndRating.Select(r => r.EventId).Count() : 0,
+
+                        },
+                        vendor = s.Vendor != null ? s.Vendor.CompanyName : null,
+                        description = s.Description,
+                        price = (
+                                    from vp in _appDbContext.VendorSRPrices
+                                    join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                    join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
+                                    where vp.SoRId == s.SoRId
+                                    select new
+                                    {
+                                        value = p.BasePrice,
+                                        priceModelName = pm.ModelName,
+                                        id = pm.ModelId
+                                    }
+                                ).ToList(),
+                        Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
+                    }).ToListAsync();
+
+                return resources;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while getting resources", ex);
+            }
+        }
+
 
     }
 }
