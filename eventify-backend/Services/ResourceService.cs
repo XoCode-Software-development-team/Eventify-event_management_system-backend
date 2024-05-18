@@ -632,6 +632,24 @@ namespace eventify_backend.Services
                     }
                 }
 
+                // Extract user manual information from the JSON data
+                var manuals = json["manuals"] as JArray;
+
+                if (manuals != null)
+                {
+                    foreach (var file in manuals)
+                    {
+                        var resourceManual = new ResourceManual
+                        {
+                            SoRId = resource.SoRId,
+                            Manual = file.ToString()
+                        };
+
+                        // Add the video to the database context
+                        _appDbContext.ResourceManual.Add(resourceManual);
+                    }
+                }
+
                 // Similar handling for other entities
                 await _appDbContext.SaveChangesAsync();
             }
@@ -767,6 +785,7 @@ namespace eventify_backend.Services
                         }).ToList() : null,
                         images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image) : null,
                         videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
+                        Manuals = s.ResourceManual != null ? s.ResourceManual.Select(rm => rm.Manual) : null
                     })
                     .ToListAsync();
 
@@ -799,6 +818,7 @@ namespace eventify_backend.Services
                     .Include(s => s.VendorSRLocations)
                     .Include(s => s.VendorRSPhotos)
                     .Include(s => s.VendorRSVideos)
+                    .Include(s => s.ResourceManual)
                     .FirstOrDefaultAsync(s => s.SoRId == soRId && s.VendorId == vendorId);
 
                 if (resource == null)
@@ -936,6 +956,27 @@ namespace eventify_backend.Services
                             };
 
                             resource.VendorRSVideos.Add(vendorSRVideo);
+                        }
+                    }
+                }
+
+                // Remove all manual entries related to the resource
+                if (resource.ResourceManual != null)
+                {
+                    _appDbContext.ResourceManual.RemoveRange(resource.ResourceManual);
+
+                    var manuals = json["manuals"] as JArray;
+                    if (manuals != null)
+                    {
+                        foreach (var manual in manuals)
+                        {
+                            var resourceManual = new ResourceManual
+                            {
+                                SoRId = resource.SoRId,
+                                Manual = manual.ToString()
+                            };
+
+                            resource.ResourceManual.Add(resourceManual);
                         }
                     }
                 }
