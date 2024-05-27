@@ -15,5 +15,7 @@ namespace eventify_backend.Models
         public string? Road { get; set; }
         public string? City { get; set; }
 
+        public ICollection<Notification>? Notifications { get; set; }
+
     }
 }

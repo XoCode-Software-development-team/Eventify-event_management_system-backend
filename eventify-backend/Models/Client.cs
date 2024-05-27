@@ -7,7 +7,8 @@ namespace eventify_backend.Models
     {
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-
         public ICollection<Event>? Events { get; set; }
+
+        public ICollection<VendorFollow>? VendorFollows { get; set;}
     }
 }

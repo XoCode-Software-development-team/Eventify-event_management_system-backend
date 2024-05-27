@@ -787,17 +787,17 @@ namespace eventify_backend.Services
                         videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
                         Manuals = s.ResourceManual != null ? s.ResourceManual.Select(rm => rm.Manual) : null
                     })
+                    .AsSplitQuery()
                     .ToListAsync();
 
                 return resource;
-
             }
             catch (Exception ex)
             {
-                throw new Exception("An error occurred whiel getting resource details", ex);
+                throw new Exception("An error occurred while getting resource details", ex);
             }
-
         }
+
 
         public async Task UpdateResourceAsync(Guid vendorId, int soRId, object data)
         {

@@ -10,11 +10,14 @@ namespace eventify_backend.Services
     public class ServiceService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly NotificationService _notificationService;
 
-        public ServiceService(AppDbContext appDbContext)
+
+        public ServiceService(AppDbContext appDbContext, NotificationService notificationService)
         {
 
             this._appDbContext = appDbContext;
+            this._notificationService = notificationService;
 
         }
 
@@ -755,7 +758,7 @@ namespace eventify_backend.Services
         {
             try
             {
-                // Retrieve service details for the specified service ID
+                // Retrieve service details for the specified servicee ID
                 var service = await _appDbContext.Services
                     .Where(s => s.SoRId == soRId)
                     .Select(s => new
@@ -781,7 +784,7 @@ namespace eventify_backend.Services
                                 rate = rr.Ratings
                             })
                             .ToList() : null,
-                        featureAndFacility =s.FeaturesAndFacilities != null ? s.FeaturesAndFacilities.Select(ff => ff.FacilityName): null,
+                        featureAndFacility = s.FeaturesAndFacilities != null ? s.FeaturesAndFacilities.Select(ff => ff.FacilityName) : null,
                         price = (
                                     from vp in _appDbContext.VendorSRPrices
                                     join p in _appDbContext.Prices on vp.PId equals p.Pid
@@ -795,23 +798,26 @@ namespace eventify_backend.Services
                                         name = p.Pname
                                     }
                                 ).ToList(),
-                        location =s.VendorSRLocations != null ? s.VendorSRLocations.Select(vl => new
+                        location = s.VendorSRLocations != null ? s.VendorSRLocations.Select(vl => new
                         {
-                            vl.HouseNo,vl.Area,vl.District,vl.Country,vl.State
+                            vl.HouseNo,
+                            vl.Area,
+                            vl.District,
+                            vl.Country,
+                            vl.State
                         }).ToList() : null,
-                        images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image): null,
-                        videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null,
+                        images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(vp => vp.Image) : null,
+                        videos = s.VendorRSVideos != null ? s.VendorRSVideos.Select(vv => vv.Video) : null
                     })
+                    .AsSplitQuery()
                     .ToListAsync();
 
                 return service;
-
             }
             catch (Exception ex)
             {
-                throw new Exception("An error occurred whiel getting service details", ex);
+                throw new Exception("An error occurred while getting service details", ex);
             }
-
         }
 
 
@@ -977,6 +983,8 @@ namespace eventify_backend.Services
 
                 // Save changes to the database
                 await _appDbContext.SaveChangesAsync();
+
+                await _notificationService.AddNotificationAsync(vendorId,soRId);
             }
             catch (ArgumentNullException)
             {

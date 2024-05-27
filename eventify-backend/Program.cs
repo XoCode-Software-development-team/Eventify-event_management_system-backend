@@ -1,4 +1,6 @@
 using eventify_backend.Data;
+using eventify_backend.Hubs;
+using eventify_backend.Models;
 using eventify_backend.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ServiceService>();
 builder.Services.AddScoped<ResourceService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddSignalR();
+
 
 // Retrieve connection string from configuration.
 var connectionString = builder.Configuration.GetConnectionString("EventifyDbConnectionString");
@@ -18,6 +23,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // CORS configuration
+// CORS configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost4200",
@@ -26,9 +32,12 @@ builder.Services.AddCors(options =>
             // Allow requests from http://localhost:4200
             builder.WithOrigins("http://localhost:4200")
                    .AllowAnyHeader()
-                   .AllowAnyMethod();
+                   .AllowAnyMethod()
+                   .AllowCredentials(); // Allow credentials
+
         });
 });
+
 
 var app = builder.Build();
 
@@ -46,6 +55,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 // Run the application
 app.Run();

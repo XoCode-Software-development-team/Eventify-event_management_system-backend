@@ -205,6 +205,7 @@ C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Newtonsoft.Json.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Pomelo.EntityFrameworkCore.MySql.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\System.CodeDom.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\System.Net.WebSockets.WebSocketProtocol.dll
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.csproj.AssemblyReference.cache
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.AssemblyInfoInputs.cache

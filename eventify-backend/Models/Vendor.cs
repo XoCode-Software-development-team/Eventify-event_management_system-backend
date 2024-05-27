@@ -9,5 +9,7 @@ namespace eventify_backend.Models
         public string? ContactPersonName { get; set; }
 
         public ICollection<ServiceAndResource>? ServiceAndResources { get; set; }
+        public ICollection<VendorFollow>? VendorFollows { get; set; }
+
     }
 }

@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240517114946_Initial")]
-    partial class Initial
+    [Migration("20240527110956_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -128,6 +128,32 @@ namespace eventifybackend.Migrations
                     b.HasKey("SoRId", "FacilityName");
 
                     b.ToTable("FeatureAndFacility");
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.Notification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("Read")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("TimeStamp")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notification");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.Price", b =>
@@ -318,6 +344,23 @@ namespace eventifybackend.Migrations
                     b.HasDiscriminator<string>("Discriminator").HasValue("User");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.VendorFollow", b =>
+                {
+                    b.Property<Guid>("VendorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnOrder(0);
+
+                    b.Property<Guid>("ClientId")
+                        .HasColumnType("char(36)")
+                        .HasColumnOrder(1);
+
+                    b.HasKey("VendorId", "ClientId");
+
+                    b.HasIndex("ClientId");
+
+                    b.ToTable("VendorFollows");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.VendorSRLocation", b =>
@@ -517,6 +560,17 @@ namespace eventifybackend.Migrations
                     b.Navigation("ServiceAndResource");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.Notification", b =>
+                {
+                    b.HasOne("eventify_backend.Models.User", "User")
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.Price", b =>
                 {
                     b.HasOne("eventify_backend.Models.PriceModel", "PriceModel")
@@ -565,6 +619,25 @@ namespace eventifybackend.Migrations
                         .HasForeignKey("VendorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("eventify_backend.Models.VendorFollow", b =>
+                {
+                    b.HasOne("eventify_backend.Models.Client", "Client")
+                        .WithMany("VendorFollows")
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("eventify_backend.Models.Vendor", "Vendor")
+                        .WithMany("VendorFollows")
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Client");
 
                     b.Navigation("Vendor");
                 });
@@ -678,6 +751,11 @@ namespace eventifybackend.Migrations
                     b.Navigation("Services");
                 });
 
+            modelBuilder.Entity("eventify_backend.Models.User", b =>
+                {
+                    b.Navigation("Notifications");
+                });
+
             modelBuilder.Entity("eventify_backend.Models.Resource", b =>
                 {
                     b.Navigation("ResourceManual");
@@ -686,11 +764,15 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.Client", b =>
                 {
                     b.Navigation("Events");
+
+                    b.Navigation("VendorFollows");
                 });
 
             modelBuilder.Entity("eventify_backend.Models.Vendor", b =>
                 {
                     b.Navigation("ServiceAndResources");
+
+                    b.Navigation("VendorFollows");
                 });
 #pragma warning restore 612, 618
         }

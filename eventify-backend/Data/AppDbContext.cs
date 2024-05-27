@@ -44,6 +44,10 @@ namespace eventify_backend.Data
 
         public DbSet<ResourceManual> ResourceManual { get; set; }
 
+        public DbSet<Notification> Notification { get; set; }
+
+        public DbSet<VendorFollow> VendorFollows { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FeatureAndFacility>()
@@ -102,6 +106,9 @@ namespace eventify_backend.Data
 
             modelBuilder.Entity<ResourceManual>()
                 .HasKey(rm => new {rm.SoRId, rm.Manual });
+
+            modelBuilder.Entity<VendorFollow>()
+            .HasKey(vf => new { vf.VendorId, vf.ClientId });
         }
     }
 

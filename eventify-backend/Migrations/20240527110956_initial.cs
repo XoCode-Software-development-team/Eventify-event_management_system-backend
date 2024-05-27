@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eventifybackend.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -151,6 +151,30 @@ namespace eventifybackend.Migrations
                 .Annotation("MySql:CharSet", "utf8mb4");
 
             migrationBuilder.CreateTable(
+                name: "Notification",
+                columns: table => new
+                {
+                    NotificationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    Message = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    TimeStamp = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    Read = table.Column<bool>(type: "tinyint(1)", nullable: false),
+                    UserId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notification", x => x.NotificationId);
+                    table.ForeignKey(
+                        name: "FK_Notification_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
                 name: "ServiceAndResources",
                 columns: table => new
                 {
@@ -187,6 +211,31 @@ namespace eventifybackend.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ServiceAndResources_Users_VendorId",
+                        column: x => x.VendorId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "VendorFollows",
+                columns: table => new
+                {
+                    VendorId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
+                    ClientId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VendorFollows", x => new { x.VendorId, x.ClientId });
+                    table.ForeignKey(
+                        name: "FK_VendorFollows_Users_ClientId",
+                        column: x => x.ClientId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_VendorFollows_Users_VendorId",
                         column: x => x.VendorId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -444,6 +493,11 @@ namespace eventifybackend.Migrations
                 column: "SORId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Notification_UserId",
+                table: "Notification",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Prices_ModelId",
                 table: "Prices",
                 column: "ModelId");
@@ -472,6 +526,11 @@ namespace eventifybackend.Migrations
                 name: "IX_ServiceAndResources_VendorId",
                 table: "ServiceAndResources",
                 column: "VendorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VendorFollows_ClientId",
+                table: "VendorFollows",
+                column: "ClientId");
         }
 
         /// <inheritdoc />
@@ -487,6 +546,9 @@ namespace eventifybackend.Migrations
                 name: "FeatureAndFacility");
 
             migrationBuilder.DropTable(
+                name: "Notification");
+
+            migrationBuilder.DropTable(
                 name: "PriceVendorSRPrice");
 
             migrationBuilder.DropTable(
@@ -494,6 +556,9 @@ namespace eventifybackend.Migrations
 
             migrationBuilder.DropTable(
                 name: "ReviewAndRatings");
+
+            migrationBuilder.DropTable(
+                name: "VendorFollows");
 
             migrationBuilder.DropTable(
                 name: "VendorSRLocation");
