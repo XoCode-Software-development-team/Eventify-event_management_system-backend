@@ -380,6 +380,26 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/[Controller]/priceModels/available")]
+        public async Task<IActionResult> GetAvailablePriceModels()
+        {
+            try
+            {
+                var result = await _serviceService.GetAvailablePriceModelsAsync();
+                if (result == null || result.Count == 0)
+                {
+                    return NotFound(); // No price models found
+                }
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
         [HttpPost("/api/[Controller]/addNew/{vendorId}")]
         public async Task<IActionResult> AddNewService([FromRoute] Guid vendorId, [FromBody] object data)
@@ -429,19 +449,19 @@ namespace eventify_backend.Controllers
 
 
         [HttpGet("/api/[Controller]/all")]
-        public async Task<IActionResult> GetServicesForClients()
+        public async Task<IActionResult> GetServicesForClients([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string sortBy, [FromQuery] int? minPrice, [FromQuery] int? maxPrice, [FromQuery] int? modelId, [FromQuery] string categories, [FromQuery] int? rate)
         {
             try
             {
-                var result = await _serviceService.GetServicesForClientsAsync();
+                var result = await _serviceService.GetServicesForClientsAsync(page, pageSize, sortBy, minPrice, maxPrice, modelId, categories, rate);
                 return Ok(result);
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
 
         [HttpGet("/api/[Controller]/details/{soRId}")]

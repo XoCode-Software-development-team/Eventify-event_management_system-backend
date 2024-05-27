@@ -418,6 +418,26 @@ namespace eventify_backend.Controllers
             }
         }
 
+        [HttpGet("/api/[Controller]/priceModels/available")]
+        public async Task<IActionResult> GetAvailablePriceModels()
+        {
+            try
+            {
+                var result = await _resourceService.GetAvailablePriceModelsAsync();
+                if (result == null || result.Count == 0)
+                {
+                    return NotFound(); // No price models found
+                }
+
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
 
     }
 }

@@ -998,6 +998,30 @@ namespace eventify_backend.Services
                 throw new Exception("An error occurred.", ex);
             }
         }
+        public async Task<List<PriceModelDto>> GetAvailablePriceModelsAsync()
+        {
+            try
+            {
+                // Using LINQ join to ensure we get PriceModels that are referenced
+                var priceModels = await (from pm in _appDbContext.PriceModels
+                                         join p in _appDbContext.Prices on pm.ModelId equals p.ModelId
+                                         join vp in _appDbContext.VendorSRPrices on p.Pid equals vp.PId
+                                         join s in _appDbContext.Resources on vp.SoRId equals s.SoRId
+                                         select new PriceModelDto
+                                         {
+                                             ModelId = pm.ModelId,
+                                             ModelName = pm.ModelName
+                                         })
+                                         .Distinct()
+                                         .ToListAsync();
 
+                return priceModels;
+            }
+            catch (Exception ex)
+            {
+                // Log exception details here for debugging purposes
+                throw new Exception("An error occurred while processing the request.", ex);
+            }
+        }
     }
 }
