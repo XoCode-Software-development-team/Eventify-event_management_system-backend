@@ -14,7 +14,7 @@ namespace eventify_backend.Services
         public ResourceService(AppDbContext appDbContext)
         {
             this._appDbContext = appDbContext;
-            
+
         }
 
         public async Task<List<ResourceCategoryDTO>> GetAllResourceCategories()
@@ -514,6 +514,7 @@ namespace eventify_backend.Services
                     IsRequestToDelete = false,
                     VendorId = vendorId,
                     ResourceCategoryId = json["resourceCategory"]?.Value<int>() ?? 0,
+                    OverallRate = 0
                 };
 
                 if (json["resourceMaxCapacity"] != null && int.TryParse(json["resourceMaxCapacity"]?.ToString(), out int capacity))
@@ -688,13 +689,55 @@ namespace eventify_backend.Services
             }
         }
 
-        public async Task<object> GetResourcesForClientsAsync()
+        public async Task<object> GetResourcesForClientsAsync(int page, int pageSize, string sortBy, int? minPrice, int? maxPrice, int? modelId, string categories, int? rate)
         {
             try
             {
-                // Retrieve resources for clients that are not suspended
-                var resources = await _appDbContext.Resources
+                // Base query for resources
+                var resourcesQuery = _appDbContext.Resources
                     .Where(s => s.IsSuspend == false)
+                    .AsQueryable();
+
+                // Join with VendorSRPrices and Prices for filtering by price and modelId
+                if (minPrice.HasValue && maxPrice.HasValue && modelId.HasValue)
+                {
+                    resourcesQuery = (from s in resourcesQuery
+                                      join vp in _appDbContext.VendorSRPrices on s.SoRId equals vp.SoRId
+                                      join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                      where p.BasePrice >= minPrice.Value
+                                         && p.BasePrice <= maxPrice.Value
+                                         && p.ModelId == modelId.Value
+                                      select s)
+                                    .Distinct();
+                }
+
+                // Filter by categories if provided
+                if (!string.IsNullOrEmpty(categories))
+                {
+                    var categoryIds = categories.Split(',').Select(int.Parse).ToList();
+                    resourcesQuery = resourcesQuery.Where(s => categoryIds.Contains(s.ResourceCategoryId));
+                }
+
+                // Filter by rate if provided
+                if (rate.HasValue)
+                {
+                    resourcesQuery = resourcesQuery.Where(s => s.OverallRate >= rate.Value);
+                }
+
+                // Apply sorting
+                resourcesQuery = sortBy switch
+                {
+                    "sNameAZ" => resourcesQuery.OrderBy(s => s.Name),
+                    "sNameZA" => resourcesQuery.OrderByDescending(s => s.Name),
+                    "RateLH" => resourcesQuery.OrderBy(s => s.OverallRate),
+                    "RateHL" => resourcesQuery.OrderByDescending(s => s.OverallRate),
+                    _ => resourcesQuery
+                };
+
+                // Get paginated results
+                var resources = await resourcesQuery
+                    .Skip(page * pageSize)
+                    .Take(pageSize)
                     .Select(s => new
                     {
                         soRId = s.SoRId,
@@ -703,8 +746,7 @@ namespace eventify_backend.Services
                         rating = new
                         {
                             rate = s.OverallRate,
-                            count = s.ReviewAndRating != null ? s.ReviewAndRating.Select(r => r.EventId).Count() : 0,
-
+                            count = s.ReviewAndRating != null ? s.ReviewAndRating.Count() : 0,
                         },
                         vendor = s.Vendor != null ? s.Vendor.CompanyName : null,
                         description = s.Description,
@@ -721,9 +763,17 @@ namespace eventify_backend.Services
                                     }
                                 ).ToList(),
                         Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
-                    }).ToListAsync();
+                    })
+                    .ToListAsync();
 
-                return resources;
+                // Get total item count for pagination
+                var totalItems = await resourcesQuery.CountAsync();
+
+                return new
+                {
+                    data = resources,
+                    totalItems = totalItems
+                };
             }
             catch (Exception ex)
             {
@@ -1022,6 +1072,19 @@ namespace eventify_backend.Services
                 // Log exception details here for debugging purposes
                 throw new Exception("An error occurred while processing the request.", ex);
             }
+        }
+
+        public async Task<Dictionary<int, int>> GetRatingCountAsync()
+        {
+            var ratingCount = new Dictionary<int, int>();
+
+            ratingCount[4] = await _appDbContext.Resources.CountAsync(s => s.OverallRate >= 4);
+            ratingCount[3] = await _appDbContext.Resources.CountAsync(s => s.OverallRate >= 3);
+            ratingCount[2] = await _appDbContext.Resources.CountAsync(s => s.OverallRate >= 2);
+            ratingCount[1] = await _appDbContext.Resources.CountAsync(s => s.OverallRate >= 1);
+            ratingCount[0] = await _appDbContext.Resources.CountAsync(s => s.OverallRate >= 0);
+
+            return ratingCount;
         }
     }
 }

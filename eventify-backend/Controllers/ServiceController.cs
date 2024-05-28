@@ -309,7 +309,7 @@ namespace eventify_backend.Controllers
             try
             {
                 var result = await _serviceService.GetServicesOfBookingRequestAsync(categoryId, vendorId);
-                if(result == null)
+                if (result == null)
                     return NotFound("not found");
 
                 return Ok(result);
@@ -417,11 +417,11 @@ namespace eventify_backend.Controllers
         }
 
         [HttpPut("/api/[Controller]/update/{vendorId}/{soRId}")]
-        public async Task<IActionResult> UpdateService([FromRoute] Guid vendorId,int soRId, [FromBody] object data)
+        public async Task<IActionResult> UpdateService([FromRoute] Guid vendorId, int soRId, [FromBody] object data)
         {
             try
             {
-                await _serviceService.UpdateServiceAsync(vendorId,soRId, data);
+                await _serviceService.UpdateServiceAsync(vendorId, soRId, data);
                 return Ok();
             }
 
@@ -478,6 +478,21 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-    
+
+        [HttpGet("/api/[Controller]/ratingcount")]
+        public async Task<IActionResult> GetRatingCount(int soRId)
+        {
+            try
+            {
+                var result = await _serviceService.GetRatingCountAsync();
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
     }
 }

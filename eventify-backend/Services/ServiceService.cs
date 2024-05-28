@@ -576,6 +576,7 @@ namespace eventify_backend.Services
                     IsRequestToDelete = false,
                     VendorId = vendorId,
                     ServiceCategoryId = json["serviceCategory"]?.Value<int>() ?? 0,
+                    OverallRate = 0
                 };
 
                 if (json["serviceMaxCapacity"] != null && int.TryParse(json["serviceMaxCapacity"]?.ToString(), out int capacity))
@@ -734,99 +735,97 @@ namespace eventify_backend.Services
         }
 
 
-public async Task<object> GetServicesForClientsAsync(int page, int pageSize, string sortBy, int? minPrice, int? maxPrice, int? modelId, string categories, int? rate)
-{
-    try
-    {
-        // Base query for services
-        var servicesQuery = _appDbContext.Services
-            .Where(s => s.IsSuspend == false)
-            .AsQueryable();
-
-        // Join with VendorSRPrices and Prices for filtering by price and modelId
-        if (minPrice.HasValue && maxPrice.HasValue && modelId.HasValue)
+        public async Task<object> GetServicesForClientsAsync(int page, int pageSize, string sortBy, int? minPrice, int? maxPrice, int? modelId, string categories, int? rate)
         {
-            servicesQuery = from s in servicesQuery
-                            join vp in _appDbContext.VendorSRPrices on s.SoRId equals vp.SoRId
-                            join p in _appDbContext.Prices on vp.PId equals p.Pid
-                            where p.BasePrice >= minPrice.Value
-                               && p.BasePrice <= maxPrice.Value
-                               && p.ModelId == modelId.Value
-                            select s;
-        }
-
-        // Filter by categories if provided
-        if (!string.IsNullOrEmpty(categories))
-        {
-            var categoryIds = categories.Split(',').Select(int.Parse).ToList();
-            servicesQuery = servicesQuery.Where(s => categoryIds.Contains(s.ServiceCategoryId));
-        }
-
-        // Filter by rate if provided
-        if (rate.HasValue)
-        {
-            servicesQuery = servicesQuery.Where(s => s.OverallRate >= rate.Value);
-        }
-
-        // Apply sorting
-        servicesQuery = sortBy switch
-        {
-            "sNameAZ" => servicesQuery.OrderBy(s => s.Name),
-            "sNameZA" => servicesQuery.OrderByDescending(s => s.Name),
-            "RateLH" => servicesQuery.OrderBy(s => s.OverallRate),
-            "RateHL" => servicesQuery.OrderByDescending(s => s.OverallRate),
-            _ => servicesQuery
-        };
-
-        // Get paginated results
-        var services = await servicesQuery
-            .Skip(page * pageSize)
-            .Take(pageSize)
-            .Select(s => new
+            try
             {
-                soRId = s.SoRId,
-                name = s.Name,
-                categoryId = s.ServiceCategoryId,
-                rating = new
+                // Base query for services
+                var servicesQuery = _appDbContext.Services
+                    .Where(s => s.IsSuspend == false)
+                    .AsQueryable();
+
+                // Join with VendorSRPrices and Prices for filtering by price and modelId
+                if (minPrice.HasValue && maxPrice.HasValue && modelId.HasValue)
                 {
-                    rate = s.OverallRate,
-                    count = s.ReviewAndRating != null ? s.ReviewAndRating.Count() : 0,
-                },
-                vendor = s.Vendor != null ? s.Vendor.CompanyName : null,
-                description = s.Description,
-                price = (
-                            from vp in _appDbContext.VendorSRPrices
-                            join p in _appDbContext.Prices on vp.PId equals p.Pid
-                            join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
-                            where vp.SoRId == s.SoRId
-                            select new
-                            {
-                                value = p.BasePrice,
-                                priceModelName = pm.ModelName,
-                                id = pm.ModelId
-                            }
-                        ).ToList(),
-                Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
-            })
-            .ToListAsync();
+                    servicesQuery = (from s in servicesQuery
+                                     join vp in _appDbContext.VendorSRPrices on s.SoRId equals vp.SoRId
+                                     join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                     where p.BasePrice >= minPrice.Value
+                                        && p.BasePrice <= maxPrice.Value
+                                        && p.ModelId == modelId.Value
+                                     select s)
+                                    .Distinct();
+                }
 
-        // Get total item count for pagination
-        var totalItems = await servicesQuery.CountAsync();
+                // Filter by categories if provided
+                if (!string.IsNullOrEmpty(categories))
+                {
+                    var categoryIds = categories.Split(',').Select(int.Parse).ToList();
+                    servicesQuery = servicesQuery.Where(s => categoryIds.Contains(s.ServiceCategoryId));
+                }
 
-        return new
-        {
-            data = services,
-            totalItems = totalItems
-        };
-    }
-    catch (Exception ex)
-    {
-        throw new Exception("An error occurred while getting services", ex);
-    }
-}
+                // Filter by rate if provided
+                if (rate.HasValue)
+                {
+                    servicesQuery = servicesQuery.Where(s => s.OverallRate >= rate.Value);
+                }
 
+                // Apply sorting
+                servicesQuery = sortBy switch
+                {
+                    "sNameAZ" => servicesQuery.OrderBy(s => s.Name),
+                    "sNameZA" => servicesQuery.OrderByDescending(s => s.Name),
+                    "RateLH" => servicesQuery.OrderBy(s => s.OverallRate),
+                    "RateHL" => servicesQuery.OrderByDescending(s => s.OverallRate),
+                    _ => servicesQuery
+                };
 
+                // Get paginated results
+                var services = await servicesQuery
+                    .Skip(page * pageSize)
+                    .Take(pageSize)
+                    .Select(s => new
+                    {
+                        soRId = s.SoRId,
+                        name = s.Name,
+                        categoryId = s.ServiceCategoryId,
+                        rating = new
+                        {
+                            rate = s.OverallRate,
+                            count = s.ReviewAndRating != null ? s.ReviewAndRating.Count() : 0,
+                        },
+                        vendor = s.Vendor != null ? s.Vendor.CompanyName : null,
+                        description = s.Description,
+                        price = (
+                                    from vp in _appDbContext.VendorSRPrices
+                                    join p in _appDbContext.Prices on vp.PId equals p.Pid
+                                    join pm in _appDbContext.PriceModels on p.ModelId equals pm.ModelId
+                                    where vp.SoRId == s.SoRId
+                                    select new
+                                    {
+                                        value = p.BasePrice,
+                                        priceModelName = pm.ModelName,
+                                        id = pm.ModelId
+                                    }
+                                ).ToList(),
+                        Images = s.VendorRSPhotos != null ? s.VendorRSPhotos.Select(photo => photo.Image).ToList() : new List<string?>()
+                    })
+                    .ToListAsync();
 
+                // Get total item count for pagination
+                var totalItems = await servicesQuery.CountAsync();
+
+                return new
+                {
+                    data = services,
+                    totalItems = totalItems
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("An error occurred while getting services", ex);
+            }
+        }
 
         public async Task<object> GetServiceDetailsForClientAsync(int soRId)
         {
@@ -1074,5 +1073,19 @@ public async Task<object> GetServicesForClientsAsync(int page, int pageSize, str
                 throw new Exception("An error occurred.", ex);
             }
         }
+
+        public async Task<Dictionary<int, int>> GetRatingCountAsync()
+        {
+            var ratingCount = new Dictionary<int, int>();
+
+            ratingCount[4] = await _appDbContext.Services.CountAsync(s => s.OverallRate >= 4);
+            ratingCount[3] = await _appDbContext.Services.CountAsync(s => s.OverallRate >= 3);
+            ratingCount[2] = await _appDbContext.Services.CountAsync(s => s.OverallRate >= 2);
+            ratingCount[1] = await _appDbContext.Services.CountAsync(s => s.OverallRate >= 1);
+            ratingCount[0] = await _appDbContext.Services.CountAsync(s => s.OverallRate >= 0);
+
+            return ratingCount;
+        }
+
     }
 }

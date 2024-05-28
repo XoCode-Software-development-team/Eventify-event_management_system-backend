@@ -374,14 +374,13 @@ namespace eventify_backend.Controllers
 
 
         [HttpGet("/api/[Controller]/all")]
-        public async Task<IActionResult> GetResourcesForClients()
+        public async Task<IActionResult> GetResourcesForClients([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string sortBy, [FromQuery] int? minPrice, [FromQuery] int? maxPrice, [FromQuery] int? modelId, [FromQuery] string categories, [FromQuery] int? rate)
         {
             try
             {
-                var result = await _resourceService.GetResourcesForClientsAsync();
+                var result = await _resourceService.GetResourcesForClientsAsync(page, pageSize, sortBy, minPrice, maxPrice, modelId, categories, rate);
                 return Ok(result);
             }
-
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
@@ -438,6 +437,21 @@ namespace eventify_backend.Controllers
             }
         }
 
+
+        [HttpGet("/api/[Controller]/ratingcount")]
+        public async Task<IActionResult> GetRatingCount(int soRId)
+        {
+            try
+            {
+                var result = await _resourceService.GetRatingCountAsync();
+                return Ok(result);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
     }
 }
