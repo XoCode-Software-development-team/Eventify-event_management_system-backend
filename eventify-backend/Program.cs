@@ -11,6 +11,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ServiceService>();
 builder.Services.AddScoped<ResourceService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<AuthenticationService>(); 
 builder.Services.AddSignalR();
 
 

@@ -232,3 +232,10 @@ C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.pdb
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.genruntimeconfig.cache
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\ref\eventify-backend.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.IdentityModel.JsonWebTokens.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Logging.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\Microsoft.IdentityModel.Tokens.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\System.IdentityModel.Tokens.Jwt.dll
