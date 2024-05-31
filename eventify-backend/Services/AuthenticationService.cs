@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -20,7 +21,7 @@ namespace eventify_backend.Services
             _appDbContext = appDbContext;
         }
 
-        public async Task<string> AuthenticationAsync(User userObj)
+        public async Task<TokenApiDTO> AuthenticationAsync(User userObj)
         {
             try
             {
@@ -41,46 +42,67 @@ namespace eventify_backend.Services
                     throw new Exception("Password is missing.");
                 }
 
-                // Create token claims
-                var tokenClam = new TokenClamDTO
-                {
-                    Id = user.UserId.ToString(),
-                    Role = user.Role,
-                };
+                var tokenClam = await CreateUserTokenClaim(user);
 
-                // Check role and fetch corresponding client or vendor information
-                if (user.Role == "Client")
+                user.Token = CreateJwtToken(tokenClam);
+                user.RefreshToken = CreateRefreshToken();
+                user.RefreshTokenExpiryTime = DateTime.Now.AddDays(5);
+                await _appDbContext.SaveChangesAsync();
+
+                return new TokenApiDTO()
                 {
-                    var client = await _appDbContext.Clients.FirstOrDefaultAsync(c => c.UserId == user.UserId);
-                    if (client != null)
-                    {
-                        tokenClam.Name = $"{client.FirstName} {client.LastName}";
-                        var token = CreateJwtToken(tokenClam);
-                        return token;
-                    }
-                    throw new Exception("Failed to generate token for client.");
-                }
-                else if (user.Role == "Vendor")
-                {
-                    var vendor = await _appDbContext.Vendors.FirstOrDefaultAsync(v => v.UserId == user.UserId);
-                    if (vendor != null)
-                    {
-                        tokenClam.Name = vendor.CompanyName;
-                        var token = CreateJwtToken(tokenClam);
-                        return token;
-                    }
-                    throw new Exception("Failed to generate token for vendor.");
-                }
-                else
-                {
-                    throw new Exception("Invalid user role.");
-                }
+                    AccessToken = user.Token,
+                    RefreshToken = user.RefreshToken
+                };
             }
             catch (Exception ex)
             {
                 // Consider logging the exception here
                 throw new Exception($"Error occurred while logging in user: {ex.Message}");
             }
+        }
+
+        public async Task<TokenApiDTO> RefreshAsync(TokenApiDTO tokenApiDto)
+        {
+            try
+            {
+                string accessToken = tokenApiDto.AccessToken;
+                string refreshToken = tokenApiDto.RefreshToken;
+
+                var principal = GetPrincipalFromExpiredToken(accessToken);
+
+                var id = principal.FindFirst("id")?.Value;
+
+                if (id == null)
+                    throw new Exception("Error!");
+
+                var userId = Guid.Parse(id);
+
+                var user = await _appDbContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (user.RefreshTokenExpiryTime <= DateTime.Now)
+                    throw new Exception("Invalid request!");
+
+                var tokenClam = await CreateUserTokenClaim(user);
+
+                var newAccessToken = CreateJwtToken(tokenClam);
+                var newRefreshToken = CreateRefreshToken();
+
+                user.RefreshToken=newRefreshToken;
+                await _appDbContext.SaveChangesAsync();
+
+                return new TokenApiDTO()
+                {
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                };
+            }
+
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occured while genereate new token: {ex.Message}");
+            }
+
         }
 
 
@@ -191,13 +213,101 @@ namespace eventify_backend.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = identity,
-                Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.Now.AddSeconds(10),
                 SigningCredentials = credentials
             };
 
             var token = JwtTokenHandler.CreateToken(tokenDescriptor);
             return JwtTokenHandler.WriteToken(token);
 
+        }
+
+        private String CreateRefreshToken()
+        {
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var refreshToken = Convert.ToBase64String(tokenBytes);
+
+            var tokenInUser = _appDbContext.Users.
+                Any(a => a.RefreshToken == refreshToken);
+
+            if (tokenInUser)
+            {
+                return CreateRefreshToken();
+            }
+            return refreshToken;
+        }
+
+        private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+        {
+            var key = Encoding.ASCII.GetBytes("VeryVeryVeryVeryVerySecreatKey>>>>>>>.....");
+
+            var tokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateAudience = false,
+                ValidateIssuer = false,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateLifetime = false
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            SecurityToken securityToken;
+            var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+            var jwtSecurityToken = securityToken as JwtSecurityToken;
+            if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+                throw new SecurityTokenException("This is invalid Token");
+            return principal;
+        }
+
+        private async Task<TokenClamDTO> CreateUserTokenClaim(User user)
+        {
+            try
+            {
+                // Create token claims
+                var tokenClam = new TokenClamDTO
+                {
+                    Id = user.UserId.ToString(),
+                    Role = user.Role,
+                };
+
+                // Check role and fetch corresponding client or vendor information
+                if (user.Role == "Client")
+                {
+                    var client = await _appDbContext.Clients.FirstOrDefaultAsync(c => c.UserId == user.UserId);
+                    if (client != null)
+                    {
+                        tokenClam.Name = $"{client.FirstName} {client.LastName}";
+                    } else
+                    {
+                        throw new Exception("Client not found!");
+
+                    }
+
+                }
+                else if (user.Role == "Vendor")
+                {
+                    var vendor = await _appDbContext.Vendors.FirstOrDefaultAsync(v => v.UserId == user.UserId);
+                    if (vendor != null)
+                    {
+                        tokenClam.Name = vendor.CompanyName;
+
+                    } else
+                    {
+                        throw new Exception("Vendor not found!");
+                    }
+                }
+                else
+                {
+                    throw new Exception("Invalid user role.");
+                }
+
+                return tokenClam;
+            }
+
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex}");
+            }
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿
 using eventify_backend.DTOs;
 using eventify_backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -358,7 +359,7 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
+        [Authorize]
 
         [HttpGet("/api/[Controller]/priceModels")]
         public async Task<IActionResult> GetAllPriceModels()
@@ -463,7 +464,7 @@ namespace eventify_backend.Controllers
         }
 
 
-
+        [Authorize]
         [HttpGet("/api/[Controller]/details/{soRId}")]
         public async Task<IActionResult> GetServiceDetailsForClient(int soRId)
         {

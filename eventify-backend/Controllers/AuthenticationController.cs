@@ -1,4 +1,5 @@
-﻿using eventify_backend.Models;
+﻿using eventify_backend.DTOs;
+using eventify_backend.Models;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -26,11 +27,11 @@ namespace eventify_backend.Controllers
                     return BadRequest();
                 }
 
-                var token = await _authenticationService.AuthenticationAsync(userObj);
+                var tokenApiDto = await _authenticationService.AuthenticationAsync(userObj);
 
                 return Ok(new
                 { 
-                    Token = token,
+                    Token = tokenApiDto,
                     Message = "Login success!"
                 });
             }
@@ -90,6 +91,26 @@ namespace eventify_backend.Controllers
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
+        }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(TokenApiDTO tokenApiDTO)
+        {
+            try
+            {
+                if (tokenApiDTO is null)
+                    return BadRequest(new { Message = "Invalid client request!" });
+
+                var newTokenApiDto = await _authenticationService.RefreshAsync(tokenApiDTO);
+
+                return Ok(newTokenApiDto);
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
         }
 
     }
