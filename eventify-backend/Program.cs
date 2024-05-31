@@ -1,7 +1,11 @@
 using eventify_backend.Data;
 using eventify_backend.Hubs;
 using eventify_backend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +17,23 @@ builder.Services.AddScoped<ResourceService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AuthenticationService>(); 
 builder.Services.AddSignalR();
+
+//builder.Services.AddAuthentication(x =>
+//{
+//    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//}).AddJwtBearer(x =>
+//{
+//    x.RequireHttpsMetadata = false;
+//    x.SaveToken = true;
+//    x.TokenValidationParameters = new TokenValidationParameters
+//    {
+//        ValidateIssuerSigningKey = true,
+//        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("VeryVeryVeryVeryVerySecreatKey>>>>>>>.....")),
+//        ValidateAudience = false,
+//        ValidateIssuer = false
+//    };
+//});
 
 
 // Retrieve connection string from configuration.
@@ -58,6 +79,8 @@ app.UseRouting();
 
 // Use CORS
 app.UseCors("AllowLocalhost4200");
+
+//app.UseAuthentication();
 
 app.UseAuthorization();
 

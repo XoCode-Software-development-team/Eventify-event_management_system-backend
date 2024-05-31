@@ -26,8 +26,13 @@ namespace eventify_backend.Controllers
                     return BadRequest();
                 }
 
-                await _authenticationService.AuthenticationAsync(userObj);
-                return Ok(new { Message = "Login success!" });
+                var token = await _authenticationService.AuthenticationAsync(userObj);
+
+                return Ok(new
+                { 
+                    Token = token,
+                    Message = "Login success!"
+                });
             }
 
             catch(Exception ex)

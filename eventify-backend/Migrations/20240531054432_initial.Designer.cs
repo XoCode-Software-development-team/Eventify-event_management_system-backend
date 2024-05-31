@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240530120824_Addrole")]
-    partial class Addrole
+    [Migration("20240531054432_initial")]
+    partial class initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -310,6 +310,7 @@ namespace eventifybackend.Migrations
                         .HasColumnType("char(36)");
 
                     b.Property<string>("City")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Discriminator")
@@ -317,27 +318,43 @@ namespace eventifybackend.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("HouseNo")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Password")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Phone")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ProfilePic")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("RefreshToken")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Road")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Role")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Street")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasKey("UserId");
@@ -482,9 +499,11 @@ namespace eventifybackend.Migrations
                     b.HasBaseType("eventify_backend.Models.User");
 
                     b.Property<string>("CompanyName")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("ContactPersonName")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.HasDiscriminator().HasValue("Vendor");
