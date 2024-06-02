@@ -80,6 +80,9 @@ namespace eventify_backend.Services
 
                 var user = await _appDbContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
+                if (user == null)
+                    throw new Exception("Error!");
+
                 if (user.RefreshTokenExpiryTime <= DateTime.Now)
                     throw new Exception("Invalid request!");
 
@@ -176,6 +179,40 @@ namespace eventify_backend.Services
             {
                 // Log the exception (not shown here)
                 throw new Exception($"Error occurred while Registering vendor: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> RegisterAdminAsync(User userObj)
+        {
+            try
+            {
+                // Check if the email address exists
+                if (await CheckEmailAddressExistAsync(userObj.Email))
+                {
+                    throw new Exception("Email address already exists!");
+                }
+
+                if (userObj.Password != null)
+                {
+                    // Check password strength
+                    var pass = CheckPasswordStrength(userObj.Password);
+                    if (!string.IsNullOrEmpty(pass))
+                        throw new Exception(pass.ToString());
+
+                    if (userObj.Password != null)
+                        userObj.Password = PasswordHasher.HashPassword(userObj.Password);
+
+                    await _appDbContext.Users.AddAsync(userObj);
+                    await _appDbContext.SaveChangesAsync();
+
+                    return true;
+                }
+                return false;
+            }
+
+            catch (Exception ex)
+            {
+                throw new Exception($"Error occurred while Registering user: {ex.Message}");
             }
         }
 
@@ -295,6 +332,10 @@ namespace eventify_backend.Services
                     {
                         throw new Exception("Vendor not found!");
                     }
+                }
+                else if (user.Role == "Admin")
+                {
+                    tokenClam.Name = "Administrator";
                 }
                 else
                 {

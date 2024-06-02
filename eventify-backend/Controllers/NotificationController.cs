@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using eventify_backend.Hubs;
 using eventify_backend.Models;
 using eventify_backend.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace eventify_backend.Controllers
 {
@@ -20,9 +21,19 @@ namespace eventify_backend.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetNotifications(Guid userId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [HttpGet]
+        [Authorize]
+        public async Task<IActionResult> GetNotifications([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
+            // Extract userId from the JWT token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new { Message = "User ID is missing in the token." });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             var notifications = await _notificationService.GetNotificationsAsync(userId, pageNumber, pageSize);
             if (notifications == null)
             {
@@ -31,9 +42,19 @@ namespace eventify_backend.Controllers
             return Ok(notifications);
         }
 
-        [HttpPut("/api/[Controller]/{userId}/{notificationId}")]
-        public async Task<IActionResult> MarkAsRead(Guid userId, int notificationId)
+        [HttpPut("{notificationId}")]
+        [Authorize]
+        public async Task<IActionResult> MarkAsRead(int notificationId)
         {
+            // Extract userId from the JWT token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new { Message = "User ID is missing in the token." });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             var notification = await _notificationService.MarkAsReadAsync(userId, notificationId);
             if (notification == null)
             {
@@ -47,9 +68,19 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpPut("markAllRead/{userId}")]
-        public async Task<IActionResult> MarkAllAsRead(Guid userId)
+        [HttpPut("markAllRead")]
+        [Authorize]
+        public async Task<IActionResult> MarkAllAsRead()
         {
+            // Extract userId from the JWT token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new { Message = "User ID is missing in the token." });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             await _notificationService.MarkAllAsReadAsync(userId);
 
             // Trigger SignalR notification
@@ -58,17 +89,37 @@ namespace eventify_backend.Controllers
             return NoContent();
         }
 
-        [HttpDelete("deleteAll/{userId}")]
-        public async Task<IActionResult> DeleteAllNotifications(Guid userId)
+        [HttpDelete("deleteAll")]
+        [Authorize]
+        public async Task<IActionResult> DeleteAllNotifications()
         {
+            // Extract userId from the JWT token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new { Message = "User ID is missing in the token." });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             await _notificationService.DeleteAllNotificationsAsync(userId);
 
             return Ok();
         }
 
-        [HttpDelete("delete/{userId}/{notificationId}")]
-        public async Task<IActionResult> DeleteNotification(Guid userId,int notificationId)
+        [HttpDelete("delete/{notificationId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteNotification(int notificationId)
         {
+            // Extract userId from the JWT token
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+            if (userIdClaim == null)
+            {
+                return Unauthorized(new { Message = "User ID is missing in the token." });
+            }
+
+            var userId = Guid.Parse(userIdClaim.Value);
+
             await _notificationService.DeleteNotificationAsync(userId,notificationId);
 
             return Ok();

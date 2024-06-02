@@ -4,7 +4,7 @@ namespace eventify_backend.Helpers
 {
     public class PasswordHasher
     {
-        private static RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+        private static readonly RandomNumberGenerator rng = RandomNumberGenerator.Create();
         private static readonly int saltSize = 16;
         private static readonly int hashSize = 20;
         private static readonly int Iterations = 10000;
@@ -13,7 +13,7 @@ namespace eventify_backend.Helpers
         {
             byte[] salt;
             rng.GetBytes(salt = new byte[saltSize]);
-            var key = new Rfc2898DeriveBytes(password, salt, Iterations);
+            var key = new Rfc2898DeriveBytes(password, salt, Iterations,HashAlgorithmName.SHA256);
             var hash = key.GetBytes(hashSize);
 
             var hashBytes = new byte[saltSize + hashSize];
@@ -32,7 +32,7 @@ namespace eventify_backend.Helpers
             var salt = new byte[saltSize];
             Array.Copy(hashBytes,0, salt, 0, saltSize);
 
-            var key = new Rfc2898DeriveBytes(password, salt, Iterations);
+            var key = new Rfc2898DeriveBytes(password, salt, Iterations, HashAlgorithmName.SHA256);
             byte[] hash = key.GetBytes(hashSize);
 
             for(var i = 0; i < hashSize; i++)

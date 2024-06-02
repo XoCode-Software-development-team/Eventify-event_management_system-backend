@@ -1,6 +1,7 @@
 ﻿using eventify_backend.DTOs;
 using eventify_backend.Models;
 using eventify_backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -90,6 +91,34 @@ namespace eventify_backend.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPost("adminRegister")]
+        public async Task<IActionResult> RegisterAdmin()
+        {
+            try
+            {
+                var adminObj = new User();
+
+                adminObj.Email = "tharindumanoj2020@gmail.com";
+                adminObj.Password = "Admin123*";
+                adminObj.Role = "Admin";
+
+
+                bool result = await _authenticationService.RegisterAdminAsync(adminObj);
+                if (result)
+                {
+                    return Ok(new { Message = "Admin registered successfully!" });
+                }
+                else
+                {
+                    return BadRequest(new { Message = "Admin registration failed!" });
+                }
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, $"Internal server error: Admin already exist!");
             }
         }
 

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,6 +38,7 @@ builder.Services.AddAuthentication(x =>
 });
 
 
+
 // Retrieve connection string from configuration.
 var connectionString = builder.Configuration.GetConnectionString("EventifyDbConnectionString");
 
@@ -60,6 +62,21 @@ builder.Services.AddCors(options =>
 
         });
 });
+
+
+//Authorization policy
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("VendorPolicy", policy =>
+        policy.RequireClaim(ClaimTypes.Role, "Vendor"));
+    options.AddPolicy("ClientPolicy", policy =>
+        policy.RequireClaim(ClaimTypes.Role, "Client"));
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireClaim(ClaimTypes.Role, "Admin"));
+});
+
+
+
 
 
 var app = builder.Build();

@@ -1,5 +1,6 @@
 ﻿using eventify_backend.DTOs;
 using eventify_backend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace eventify_backend.Controllers
 
         // Endpoint to get all service categories
 
-        [HttpGet("/api/[Controller]/categories")]
+        [HttpGet("categories")]
         public async Task<IActionResult> GetAllResourceCategories()
         {
             try
@@ -46,7 +47,7 @@ namespace eventify_backend.Controllers
         }
 
         // GET: api/resource/{categoryId}
-        [HttpGet("/api/[Controller]/{categoryId}")]
+        [HttpGet("{categoryId}")]
         public async Task<IActionResult> GetResourceByCategory([FromRoute] int categoryId)
         {
             try
@@ -70,7 +71,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpPut("/api/[Controller]/{SoRId}")]
+        [HttpPut("{SoRId}")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> ChangeSuspendState([FromRoute] int SORId)
         {
             try
@@ -87,7 +89,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpDelete("/api/[Controller]/{Id}")]
+        [HttpDelete("{Id}")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> DeleteResource([FromRoute] int Id)
         {
             try
@@ -105,7 +108,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[controller]/deleteRequest")]
+        [HttpGet("deleteRequest")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> GetCategoriesWithRequestToDelete()
         {
             try
@@ -122,7 +126,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[controller]/deleteRequest/{categoryId}")]
+        [HttpGet("deleteRequest/{categoryId}")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> DeleteRequestResources([FromRoute] int categoryId)
         {
             try
@@ -141,7 +146,8 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpPut("/api/[controller]/deleteRequest/change/{Id}")]
+        [HttpPut("deleteRequest/change/{Id}")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> ChangeDeleteRequestState([FromRoute] int Id)
         {
             try
@@ -160,7 +166,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpDelete("/api/[controller]/deleteRequestApprove/{Id}")]
+        [HttpDelete("deleteRequestApprove/{Id}")]
+        [Authorize(Policy = "adminPolicy")]
         public async Task<IActionResult> ApproveVendorDeleteRequest([FromRoute] int Id)
         {
             try
@@ -179,12 +186,22 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[Controller]/categories/{Id}")]
-        public async Task<IActionResult> GetAllResourceCategoriesOfVendor(Guid Id)
+        [HttpGet("vendor/categories/all")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> GetAllResourceCategoriesOfVendor()
         {
             try
             {
-                var result = await _resourceService.GetAllResourceCategoriesOfVendorAsync(Id);
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
+                var result = await _resourceService.GetAllResourceCategoriesOfVendorAsync(vendorId);
 
                 if (result == null)
                     return NotFound("not found");
@@ -198,11 +215,22 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/vendorResource/{categoryId}/{vendorId}")]
-        public async Task<IActionResult> GetVendorResourceByCategory([FromRoute] int categoryId, Guid vendorId)
+        [HttpGet("/api/vendorResource/{categoryId}")]
+        [Authorize(Policy = "VendorPolicy")]
+
+        public async Task<IActionResult> GetVendorResourceByCategory([FromRoute] int categoryId)
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 var result = await _resourceService.GetVendorResourceByCategoryAsync(categoryId, vendorId);
                 return Ok(result);
             }
@@ -213,7 +241,8 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpPut("/api/[Controller]/deleteRequest/{SoRId}")]
+        [HttpPut("deleteRequest/{SoRId}")]
+        [Authorize(Policy = "vendorPolicy")]
         public async Task<IActionResult> RequestToDelete([FromRoute] int SORId)
         {
             try
@@ -231,12 +260,22 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/bookedResource/Categories/{Id}")]
-        public async Task<IActionResult> GetResourceCategoriesOfBookedResources(Guid Id)
+        [HttpGet("/api/bookedResource/Categories")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> GetResourceCategoriesOfBookedResources()
         {
             try
             {
-                var result = await _resourceService.GetResourceCategoriesOfBookedResourcesAsync(Id);
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
+                var result = await _resourceService.GetResourceCategoriesOfBookedResourcesAsync(vendorId);
 
                 if (result == null)
                 {
@@ -252,11 +291,21 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/bookedResource/{categoryId}/{vendorId}")]
-        public async Task<IActionResult> GetBookedResourcesOfVendor(int categoryId, Guid vendorId)
+        [HttpGet("/api/bookedResource/{categoryId}")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> GetBookedResourcesOfVendor(int categoryId)
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 var result = await _resourceService.GetBookedResourcesOfVendorAsync(categoryId, vendorId);
                 if (result == null)
                     return NotFound("not found");
@@ -269,11 +318,21 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/bookingRequestResource/{vendorId}")]
-        public async Task<IActionResult> GetCategoriesOfBookingRequest(Guid vendorId)
+        [HttpGet("/api/bookingRequestResource")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> GetCategoriesOfBookingRequest()
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 var result = await _resourceService.GetCategoriesOfBookingRequestAsync(vendorId);
                 if (result == null)
                     return NotFound("not found");
@@ -288,11 +347,21 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/bookingRequestResource/{categoryId}/{vendorId}")]
-        public async Task<IActionResult> GetResourcesOfBookingRequest(int categoryId, Guid vendorId)
+        [HttpGet("/api/bookingRequestResource/{categoryId}")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> GetResourcesOfBookingRequest(int categoryId)
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 var result = await _resourceService.GetResourcesOfBookingRequestAsync(categoryId, vendorId);
                 if (result == null)
                     return NotFound("not found");
@@ -307,6 +376,7 @@ namespace eventify_backend.Controllers
         }
 
         [HttpPut("/api/bookingRequestApproveResource/{eventId}/{soRId}")]
+        [Authorize(Policy = "VendorPolicy")]
         public async Task<IActionResult> BookResourceByVendor([FromRoute] int eventId, int soRId)
         {
             try
@@ -324,6 +394,7 @@ namespace eventify_backend.Controllers
         }
 
         [HttpPut("/api/bookingRequestRejectResource/{eventId}/{soRId}")]
+        [Authorize(Policy = "VendorPolicy")]
         public async Task<IActionResult> RejectResourceFromVendor([FromRoute] int eventId, int soRId)
         {
             try
@@ -342,11 +413,21 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpPost("/api/[Controller]/addNew/{vendorId}")]
-        public async Task<IActionResult> AddNewResource([FromRoute] Guid vendorId, [FromBody] object data)
+        [HttpPost("addNew")]
+        [Authorize(Policy = "VendorPolicy")]
+        public async Task<IActionResult> AddNewResource([FromBody] object data)
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 await _resourceService.AddNewResourceAsync(vendorId, data);
                 return Ok();
             }
@@ -357,7 +438,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[Controller]/maxPrice/{modelId}")]
+        [HttpGet("maxPrice/{modelId}")]
         public async Task<IActionResult> GetMaxPriceOfResource(int modelId)
         {
             try
@@ -373,7 +454,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/[Controller]/all")]
+        [HttpGet("all")]
         public async Task<IActionResult> GetResourcesForClients([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string sortBy, [FromQuery] int? minPrice, [FromQuery] int? maxPrice, [FromQuery] int? modelId, [FromQuery] string categories, [FromQuery] int? rate)
         {
             try
@@ -387,7 +468,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[Controller]/details/{soRId}")]
+        [HttpGet("details/{soRId}")]
         public async Task<IActionResult> GetResourceDetailsForClient(int soRId)
         {
             try
@@ -402,11 +483,21 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpPut("/api/[Controller]/update/{vendorId}/{soRId}")]
-        public async Task<IActionResult> UpdateResource([FromRoute] Guid vendorId, int soRId, [FromBody] object data)
+        [HttpPut("update/{soRId}")]
+        [Authorize(Policy = "vendorPolicy")]
+        public async Task<IActionResult> UpdateResource([FromRoute] int soRId, [FromBody] object data)
         {
             try
             {
+                // Extract vendorId from the JWT token
+                var vendorIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (vendorIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "Vendor ID is missing in the token." });
+                }
+
+                var vendorId = Guid.Parse(vendorIdClaim.Value);
+
                 await _resourceService.UpdateResourceAsync(vendorId, soRId, data);
                 return Ok();
             }
@@ -417,7 +508,7 @@ namespace eventify_backend.Controllers
             }
         }
 
-        [HttpGet("/api/[Controller]/priceModels/available")]
+        [HttpGet("priceModels/available")]
         public async Task<IActionResult> GetAvailablePriceModels()
         {
             try
@@ -438,7 +529,7 @@ namespace eventify_backend.Controllers
         }
 
 
-        [HttpGet("/api/[Controller]/ratingcount")]
+        [HttpGet("ratingcount")]
         public async Task<IActionResult> GetRatingCount(int soRId)
         {
             try
