@@ -1,9 +1,12 @@
-﻿using eventify_backend.DTOs;
+﻿using eventify_backend.Data;
+using eventify_backend.DTOs;
 using eventify_backend.Models;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace eventify_backend.Controllers
 {
@@ -140,6 +143,51 @@ namespace eventify_backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
 
+        }
+
+        [HttpPost("SendResetEmail/{email}")]
+        public async Task<IActionResult> SendEmail([FromRoute] string email)
+        {
+            try
+            {
+                await _authenticationService.SendEmailAsync(email);
+
+
+                return Ok(new
+                {
+                    StatusCode = 200,
+                    Message = "Email sent!"
+                });
+            }
+
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"{ex.Message}");
+            }
+
+        }
+
+        [HttpPost("resetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPaswordDTO resetPaswordDTO)
+        {
+            var result = await _authenticationService.ResetPasswordAsync(resetPaswordDTO);
+
+            if (result.Success)
+            {
+                return Ok(new
+                {
+                    StatusCode = 200,
+                    Message = result.Message
+                });
+            }
+            else
+            {
+                return BadRequest(new
+                {
+                    StatusCode = 400,
+                    Message = result.Message
+                });
+            }
         }
 
     }

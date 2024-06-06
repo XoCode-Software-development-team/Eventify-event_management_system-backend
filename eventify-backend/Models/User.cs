@@ -18,6 +18,8 @@ namespace eventify_backend.Models
         public string Token { get; set; } = string.Empty;
         public string RefreshToken { get; set; } = string.Empty;
         public DateTime RefreshTokenExpiryTime { get; set; }
+        public string? ResetPasswordToken { get; set; }
+        public DateTime ResetPasswordTokenExpiryTime { get; set; }
 
         public ICollection<Notification>? Notifications { get; set; }
 

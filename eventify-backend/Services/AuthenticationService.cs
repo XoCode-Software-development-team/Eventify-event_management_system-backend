@@ -2,6 +2,8 @@
 using eventify_backend.DTOs;
 using eventify_backend.Helpers;
 using eventify_backend.Models;
+using eventify_backend.UtilityService;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -15,10 +17,14 @@ namespace eventify_backend.Services
     public class AuthenticationService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthenticationService(AppDbContext appDbContext)
+        public AuthenticationService(AppDbContext appDbContext, IConfiguration configuration, IEmailService emailService)
         {
             _appDbContext = appDbContext;
+            _configuration = configuration;
+            _emailService = emailService;
         }
 
         public async Task<TokenApiDTO> AuthenticationAsync(User userObj)
@@ -349,6 +355,55 @@ namespace eventify_backend.Services
             {
                 throw new Exception($"{ex}");
             }
+        }
+
+        public async Task SendEmailAsync(string email)
+        {
+            try
+            {
+                var user = await _appDbContext.Users.FirstOrDefaultAsync(a => a.Email == email);
+                if (user == null)
+                    throw new Exception("Email doen't exist!");
+
+
+                var tokenBytes = RandomNumberGenerator.GetBytes(64);
+                var emailToken = Convert.ToBase64String(tokenBytes);
+                user.ResetPasswordToken = emailToken;
+                user.ResetPasswordTokenExpiryTime = DateTime.Now.AddMinutes(15);
+
+                var resetEmail = new Email(email, "Reset password!!", ResetPasswordEmailBody.EmailStringBody(email, emailToken));
+
+                _emailService.SendEmail(resetEmail);
+                _appDbContext.Entry(user).State = EntityState.Modified;
+                await _appDbContext.SaveChangesAsync();
+            }
+
+            catch (Exception ex)
+            {
+                throw new Exception($"{ex}");
+            }
+
+        }
+
+        public async Task<(bool Success, string Message)> ResetPasswordAsync(ResetPaswordDTO resetPaswordDTO)
+        {
+            var newToken = resetPaswordDTO.EmailToken.Replace(" ", "+");
+            var user = await _appDbContext.Users.AsNoTracking().FirstOrDefaultAsync(a => a.Email == resetPaswordDTO.Email);
+
+            if (user is null)
+                return (false, "Email doesn't exist!");
+
+            var tokenCode = user.ResetPasswordToken;
+            DateTime emailTokenExpiry = user.ResetPasswordTokenExpiryTime;
+
+            if (tokenCode != newToken || emailTokenExpiry < DateTime.Now)
+                return (false, "Invalid reset link");
+
+            user.Password = PasswordHasher.HashPassword(resetPaswordDTO.NewPassword);
+            _appDbContext.Entry(user).State = EntityState.Modified;
+            await _appDbContext.SaveChangesAsync();
+
+            return (true, "Password reset successfully!");
         }
 
     }

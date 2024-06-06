@@ -239,3 +239,7 @@ C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.pdb
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\eventify-backend.genruntimeconfig.cache
 C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\obj\Debug\net8.0\ref\eventify-backend.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\MailKit.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\MimeKit.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\NETCore.MailKit.dll
+C:\Users\manoj\Desktop\Task\On\Eventify-event_management_system-backend\eventify-backend\bin\Debug\net8.0\BouncyCastle.Crypto.dll
