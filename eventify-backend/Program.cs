@@ -4,7 +4,6 @@ using eventify_backend.Services;
 using eventify_backend.UtilityService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
@@ -17,7 +16,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<ServiceService>();
 builder.Services.AddScoped<ResourceService>();
 builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<AuthenticationService>(); 
+builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddScoped<UserProfileService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
