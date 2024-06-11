@@ -330,7 +330,7 @@ namespace eventify_backend.Services
                 else if (user.Role == "Vendor")
                 {
                     var vendor = await _appDbContext.Vendors.FirstOrDefaultAsync(v => v.UserId == user.UserId);
-                    if (vendor != null)
+                    if (vendor != null && vendor.CompanyName != null)
                     {
                         tokenClam.Name = vendor.CompanyName;
 
