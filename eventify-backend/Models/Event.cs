@@ -16,6 +16,29 @@ namespace eventify_backend.Models
         public int GuestCount { get; set; }
         public byte[]? Thumbnail { get; set; }
 
+        /*
+          [Key]
+        public int Id { get; set; }
+
+        public string? Name { get; set; }
+
+        public string? StartDate { get; set; }
+
+        public string? EndDate { get; set; }
+
+        public string? StartTime { get; set; }
+
+        public string? EndTime { get; set; }
+
+        public string? Location { get; set; }
+
+        public string? Description { get; set; }
+
+        public int GuestCount { get; set; }
+
+        public string? Thumbnail { get; set; }
+        */
+
         // Foreign key referencing the Client who created the event
         [ForeignKey("Client")]
         public Guid? ClientId { get; set; }
