@@ -53,6 +53,33 @@ namespace xocode_backend.Controllers
             }
         }
 
+        [HttpPatch]
+        [Route("UpdateEvent/{Id}")]
+        public async Task<IActionResult> UpdateEvent(int Id, [FromBody] Events objEvent)
+        {
+            try
+            {
+                if (objEvent == null)
+                {
+                    return BadRequest("Invalid event data");
+                }
+
+                if (Id != objEvent.Id)
+                {
+                    return BadRequest("Event ID mismatch");
+                }
+
+                _eventDbContext.Entry(objEvent).State = EntityState.Modified;
+                await _eventDbContext.SaveChangesAsync();
+
+                return Ok(new { message = "Event updated successfully" });
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error updating event record.");
+            }
+        }
 
 
 
