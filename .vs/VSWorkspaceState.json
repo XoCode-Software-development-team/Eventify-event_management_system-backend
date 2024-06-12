@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\eventify-backend",
+    "\\eventify-backend\\Controllers",
+    "\\eventify-backend\\Data",
+    "\\eventify-backend\\Models"
+  ],
+  "SelectedNode": "\\eventify-backend\\Controllers\\NotificationController.cs",
+  "PreviewInSolutionExplorer": false
+}
