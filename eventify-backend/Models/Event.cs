@@ -14,7 +14,7 @@ namespace eventify_backend.Models
         public string? Description { get; set; }
         public string? Location { get; set; }
         public int GuestCount { get; set; }
-        public byte[]? Thumbnail { get; set; }
+        public string? Thumbnail { get; set; }
 
         // Foreign key referencing the Client who created the event
         [ForeignKey("Client")]
