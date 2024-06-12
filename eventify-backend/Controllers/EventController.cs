@@ -81,7 +81,29 @@ namespace xocode_backend.Controllers
             }
         }
 
+        [HttpDelete]
+        [Route("DeleteEvent/{Id}")]
+        public async Task<IActionResult> DeleteEvent(int Id)
+        {
+            try
+            {
+                var event1 = await _eventDbContext.Event.FindAsync(Id);
+                if (event1 == null)
+                {
+                    return NotFound("Event not found");
+                }
 
+                _eventDbContext.Entry(event1).State = EntityState.Deleted;
+                await _eventDbContext.SaveChangesAsync();
+
+                return Ok(new { message = "Event deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting event record.");
+            }
+        }
 
 
     }
