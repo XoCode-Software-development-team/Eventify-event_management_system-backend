@@ -42,7 +42,7 @@ namespace eventify_backend.Controllers
 
             catch(Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"{ex.Message}");
 
             }
 
@@ -69,7 +69,7 @@ namespace eventify_backend.Controllers
 
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return StatusCode(500, $"{ex.Message}");
             }
         }
 
@@ -121,7 +121,7 @@ namespace eventify_backend.Controllers
             }
             catch (Exception)
             {
-                return StatusCode(500, $"Internal server error: Admin already exist!");
+                return StatusCode(500, $"Admin already exist!");
             }
         }
 

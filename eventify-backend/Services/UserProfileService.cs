@@ -1,5 +1,6 @@
 ﻿using eventify_backend.Data;
 using eventify_backend.DTOs;
+using eventify_backend.Helpers;
 using eventify_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Utilities;
@@ -227,48 +228,83 @@ namespace eventify_backend.Services
 
         public async Task<bool> DeleteUserAsync(Guid userId)
         {
-            try
+            using (var transaction = await _appDbContext.Database.BeginTransactionAsync())
             {
-                var user = await _appDbContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-
-                if (user == null)
-                    throw new Exception("User not found!");
-
-                if (user.Role == "Client")
+                try
                 {
-                    var client = await _appDbContext.Clients.FirstOrDefaultAsync(u => u.UserId == userId);
+                    var user = await _appDbContext.Users.FirstOrDefaultAsync(u => u.UserId == userId);
 
-                    if (client == null)
-                        throw new Exception("User not found!");
+                    if (user == null)
+                    {
+                        // Log the attempt to delete a non-existent user
+                        return false;
+                    }
 
-                    _appDbContext.Clients.Remove(client);
+                    switch (user.Role)
+                    {
+                        case "Client":
+                            var client = await _appDbContext.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+                            if (client != null)
+                            {
+                                _appDbContext.Clients.Remove(client);
+                            }
+                            break;
+
+                        case "Vendor":
+                            var vendor = await _appDbContext.Vendors.FirstOrDefaultAsync(v => v.UserId == userId);
+                            if (vendor != null)
+                            {
+                                _appDbContext.Vendors.Remove(vendor);
+                            }
+                            break;
+
+                        case "Admin":
+                            _appDbContext.Users.Remove(user);
+                            break;
+
+                        default:
+                            return false;
+                    }
+
+                    await _appDbContext.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return true;
                 }
-                else if (user.Role == "Vendor")
+                catch
                 {
-                    var vendor = await _appDbContext.Vendors.FirstOrDefaultAsync(u => u.UserId == userId);
-
-                    if (vendor == null)
-                        throw new Exception("User not found!");
-
-                    _appDbContext.Vendors.Remove(vendor);
-                }
-                else if (user.Role == "Admin")
-                {
-                    _appDbContext.Users.Remove(user);
-                }
-                else
-                {
+                    await transaction.RollbackAsync();
+                    // Log the exception message
                     return false;
                 }
+            }
+        }
 
+
+        public async Task<(bool Success, string Message)> UpdatePasswordAsync(Guid userId, UpdatePasswordDTO updatePasswordDTO)
+        {
+            try
+            {
+                var user = await _appDbContext.Users.FindAsync(userId);
+
+                if (user == null)
+                    return (false, "User not found!");
+
+                if (!PasswordHasher.VerifyPassword(updatePasswordDTO.CurrentPassword,user.Password))
+                    return (false, "Current password is incorrect!");
+
+                if (updatePasswordDTO.NewPassword != updatePasswordDTO.ConfirmPassword)
+                    return (false, "New password and confirm password do not match!");
+
+                user.Password = PasswordHasher.HashPassword(updatePasswordDTO.NewPassword);
+                _appDbContext.Entry(user).State = EntityState.Modified;
                 await _appDbContext.SaveChangesAsync();
-                return true;
+
+                return (true, "Password updated successfully!");
             }
 
             catch (Exception ex)
             {
                 throw new Exception(ex.ToString());
-
             }
         }
     }

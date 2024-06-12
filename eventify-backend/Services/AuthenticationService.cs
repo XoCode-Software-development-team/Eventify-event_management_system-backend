@@ -64,7 +64,7 @@ namespace eventify_backend.Services
             catch (Exception ex)
             {
                 // Consider logging the exception here
-                throw new Exception($"Error occurred while logging in user: {ex.Message}");
+                throw new Exception($"{ex.Message}");
             }
         }
 
@@ -145,7 +145,7 @@ namespace eventify_backend.Services
 
             catch (Exception ex)
             {
-                throw new Exception($"Error occurred while Registering user: {ex.Message}");
+                throw new Exception($"{ex.Message}");
             }
         }
 

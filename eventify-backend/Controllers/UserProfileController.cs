@@ -2,6 +2,7 @@
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -225,6 +226,41 @@ namespace eventify_backend.Controllers
 
             }
         }
+
+        [HttpPost("updatePassword")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDTO updatePasswordDTO)
+        {
+            try
+            {
+                // Extract userId from the JWT token
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "User ID is missing in the token." });
+                }
+
+                var userId = Guid.Parse(userIdClaim.Value);
+
+                if (updatePasswordDTO == null)
+                {
+                    return BadRequest(new { Message = "Password cannot be empty!" });
+                }
+
+                var result = await _userProfileService.UpdatePasswordAsync(userId, updatePasswordDTO);
+
+                if (!result.Success)
+                    return BadRequest(new { Message = result.Message });
+
+                return Ok(new { Message = result.Message });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception for debugging
+                return StatusCode(500, new { Message = $"Internal server error: {ex.Message}" });
+            }
+        }
+
+
 
     }
 }
