@@ -35,5 +35,27 @@ namespace xocode_backend.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error retrieving data from the database.");
             }
         }
+
+        [HttpPost]
+        [Route("AddEvent")]
+        public async Task<IActionResult> AddEvent(Events objEvent)
+        {
+            try
+            {
+                _eventDbContext.Event.Add(objEvent);
+                await _eventDbContext.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetEvents), new { id = objEvent.Id }, objEvent);
+            }
+            catch (Exception ex)
+            {
+
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error creating new event record.");
+            }
+        }
+
+
+
+
+
     }
 }
