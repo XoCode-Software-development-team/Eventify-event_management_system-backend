@@ -360,7 +360,9 @@ namespace eventify_backend.Services
                             SoRId = s.SoRId,
                             Resource = s.Name,
                             EventDate = e.Event!.StartDateTime.Date.ToString("yyyy-MM-dd"),
-                            EndDate = e.Event.EndDateTime.Date.ToString("yyyy-MM-dd")
+                            EndDate = e.Event.EndDateTime.Date.ToString("yyyy-MM-dd"),
+                            EventId = e.Event.EventId,
+                            EventName = e.Event.Name
                         }))
                     .ToListAsync();
 
