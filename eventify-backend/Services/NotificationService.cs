@@ -1,5 +1,4 @@
-﻿// NotificationService.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -71,10 +70,10 @@ namespace eventify_backend.Services
 
             // Send real-time update to clients
             int unreadCount = await GetUnreadNotificationCount(userId);
-            await _hubContext.Clients.All.SendAsync("ReceiveNotificationCount", unreadCount);
+            await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotificationCount", unreadCount);
         }
 
-        public async Task AddNotificationAsync(Guid vendorId, int soRId)
+        public async Task AddUpdatedNotificationAsync(Guid vendorId, int soRId)
         {
             // Fetch all followers of the vendor
             var clients = await _appDbContext.VendorFollows
@@ -123,10 +122,10 @@ namespace eventify_backend.Services
             {
                 int unreadCount = await GetUnreadNotificationCount(notification.UserId);
 
-                await _hubContext.Clients.All
+                await _hubContext.Clients.User(notification.UserId.ToString())
                     .SendAsync("ReceiveNotification", notification);
 
-                await _hubContext.Clients.All
+                await _hubContext.Clients.User(notification.UserId.ToString())
                     .SendAsync("ReceiveNotificationCount", unreadCount);
             }
         }
@@ -143,7 +142,7 @@ namespace eventify_backend.Services
 
                 // Send real-time update to clients
                 int unreadCount = await GetUnreadNotificationCount(userId);
-                await _hubContext.Clients.All.SendAsync("ReceiveNotificationCount", unreadCount);
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotificationCount", unreadCount);
             }
 
             return notification;
@@ -162,7 +161,7 @@ namespace eventify_backend.Services
 
                 // Send real-time update to clients
                 int unreadCount = await GetUnreadNotificationCount(userId);
-                await _hubContext.Clients.All.SendAsync("ReceiveNotificationCount", unreadCount);
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotificationCount", unreadCount);
             }
         }
 
@@ -178,10 +177,8 @@ namespace eventify_backend.Services
 
                 // Send real-time update to clients
                 int unreadCount = await GetUnreadNotificationCount(userId);
-                await _hubContext.Clients.All.SendAsync("ReceiveNotificationCount", unreadCount);
+                await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotificationCount", unreadCount);
             }
         }
-
-
     }
 }

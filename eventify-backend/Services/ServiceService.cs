@@ -1060,7 +1060,7 @@ namespace eventify_backend.Services
                 // Save changes to the database
                 await _appDbContext.SaveChangesAsync();
 
-                await _notificationService.AddNotificationAsync(vendorId, soRId);
+                await _notificationService.AddUpdatedNotificationAsync(vendorId, soRId);
             }
             catch (ArgumentNullException)
             {

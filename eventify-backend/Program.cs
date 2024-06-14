@@ -18,6 +18,7 @@ builder.Services.AddScoped<ResourceService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AuthenticationService>();
 builder.Services.AddScoped<UserProfileService>();
+builder.Services.AddScoped<VendorFollowService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
