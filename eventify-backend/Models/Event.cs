@@ -18,7 +18,7 @@ namespace eventify_backend.Models
 
         // Foreign key referencing the Client who created the event
         [ForeignKey("Client")]
-        public Guid? ClientId { get; set; }
+        public Guid ClientId { get; set; }
 
         // Navigation property to represent the Client who created the event
         public Client? Client { get; set; }

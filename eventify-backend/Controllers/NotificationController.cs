@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using eventify_backend.Hubs;
 using eventify_backend.Models;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -61,9 +60,6 @@ namespace eventify_backend.Controllers
                 return NotFound();
             }
 
-            // Trigger SignalR notification
-            await _hubContext.Clients.All.SendAsync("NotificationMarkedAsRead", notificationId);
-
             return Ok(notification);
         }
 
@@ -82,9 +78,6 @@ namespace eventify_backend.Controllers
             var userId = Guid.Parse(userIdClaim.Value);
 
             await _notificationService.MarkAllAsReadAsync(userId);
-
-            // Trigger SignalR notification
-            await _hubContext.Clients.All.SendAsync("AllNotificationsMarkedAsRead");
 
             return NoContent();
         }

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace eventifybackend.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -87,6 +87,10 @@ namespace eventifybackend.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     RefreshToken = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    RefreshTokenExpiryTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    ResetPasswordToken = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ResetPasswordTokenExpiryTime = table.Column<DateTime>(type: "datetime(6)", nullable: false),
                     Discriminator = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     FirstName = table.Column<string>(type: "longtext", nullable: true)
@@ -142,8 +146,9 @@ namespace eventifybackend.Migrations
                     Location = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     GuestCount = table.Column<int>(type: "int", nullable: false),
-                    Thumbnail = table.Column<byte[]>(type: "longblob", nullable: true),
-                    ClientId = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci")
+                    Thumbnail = table.Column<string>(type: "longtext", nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    ClientId = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci")
                 },
                 constraints: table =>
                 {
@@ -152,7 +157,8 @@ namespace eventifybackend.Migrations
                         name: "FK_Events_Users_ClientId",
                         column: x => x.ClientId,
                         principalTable: "Users",
-                        principalColumn: "UserId");
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 

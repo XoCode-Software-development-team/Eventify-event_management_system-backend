@@ -12,7 +12,6 @@ namespace eventify_backend.Services
         private readonly AppDbContext _appDbContext;
         private readonly NotificationService _notificationService;
 
-
         public ServiceService(AppDbContext appDbContext, NotificationService notificationService)
         {
 
@@ -87,6 +86,14 @@ namespace eventify_backend.Services
                 service.IsSuspend = !service.IsSuspend; // Toggle the suspend state
                 await _appDbContext.SaveChangesAsync();
 
+                string serviceName = service?.Name ?? "service"; // Use a default name if service is null
+                string suspensionState = service!.IsSuspend ? "suspended" : "unsuspended";
+                var message = $"{serviceName} is {suspensionState}";
+
+                var userId = service.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
+
 
                 // Get the category ID of the service
                 var categoryId = await _appDbContext.Services
@@ -131,6 +138,13 @@ namespace eventify_backend.Services
                 _appDbContext.Services.Remove(service);               // Remove the service from the database
 
                 await _appDbContext.SaveChangesAsync();
+
+                string serviceName = service?.Name ?? "service"; // Use a default name if service is null
+                var message = $"{serviceName} is deleted by administrator";
+
+                var userId = service!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
 
                 return deletedCategoryId; // return category id of deleted service
             }
@@ -202,6 +216,17 @@ namespace eventify_backend.Services
                 service.IsRequestToDelete = false; // Mark the service as no longer needing deletion
                 await _appDbContext.SaveChangesAsync(); // Save changes to the database
 
+
+                //notification
+
+                string serviceName = service?.Name ?? "Service";
+                var message = $"{serviceName} delete request rejected by administrator";
+
+                var userId = service!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
+
+
                 // Calculate the remaining count of services still requesting deletion
                 var remainingCount = await _appDbContext.Services.CountAsync(s => s.ServiceCategoryId == service.ServiceCategoryId && s.IsRequestToDelete);
 
@@ -241,6 +266,16 @@ namespace eventify_backend.Services
                 var deletedCategory = service.ServiceCategoryId; // Save the category ID before deletion
                 _appDbContext.Services.Remove(service); // Remove the service from the database
                 await _appDbContext.SaveChangesAsync(); // Save changes to the database
+
+
+                //notification
+
+                string serviceName = service?.Name ?? "Service";
+                var message = $"{serviceName} delete request approved by administrator";
+
+                var userId = service!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
 
                 // Calculate the remaining count of services still requesting deletion
                 var remainingCount = await _appDbContext.Services.CountAsync(s => s.ServiceCategoryId == deletedCategory && s.IsRequestToDelete);
@@ -287,7 +322,25 @@ namespace eventify_backend.Services
 
                 await _appDbContext.SaveChangesAsync();
 
-                return service.ServiceCategoryId;
+                //notification
+
+                if (service.IsRequestToDelete)
+                {
+                    string serviceName = service?.Name ?? "service";
+                    // Correct LINQ query to fetch the company name based on SORId
+                    var companyName = await _appDbContext.Vendors
+                        .Where(v => v.ServiceAndResources!.Any(s => s.SoRId == SORId))
+                        .Select(v => v.CompanyName)
+                        .FirstOrDefaultAsync();
+
+                    var message = $"{serviceName} request to delete by {companyName}";
+
+                    var adminId = await _appDbContext.Users.Where(u => u.Role == "Admin").Select(u => u.UserId).FirstOrDefaultAsync();
+
+                    await _notificationService.CreateIndividualNotification(message, adminId);
+                }
+
+                return service!.ServiceCategoryId;
             }
             catch (Exception ex)
             {
@@ -468,6 +521,8 @@ namespace eventify_backend.Services
 
                 eventSorToApprove.IsApprove = true;
 
+                await _appDbContext.SaveChangesAsync();
+
                 // Create a new event-SR record
                 var eventSR = new EventSR
                 {
@@ -478,7 +533,30 @@ namespace eventify_backend.Services
                 // Add the new event-SR record to the context
                 await _appDbContext.EventSr.AddAsync(eventSR);
                 //_appDbContext.EventSoRApproves.Remove(eventSorToApprove);
+
                 await _appDbContext.SaveChangesAsync();
+
+
+                //notification
+
+                // Fetch event details
+                var eventDetails = await _appDbContext.Events.FirstOrDefaultAsync(e => e.EventId == eventId);
+                if (eventDetails == null)
+                {
+                    throw new Exception($"Event not found with EventId: {eventId}");
+                }
+
+                // Fetch company name
+                var companyName = await _appDbContext.ServiceAndResources
+                    .Where(v => v.SoRId == soRId)
+                    .Select(v => v.Vendor!.CompanyName)
+                    .FirstOrDefaultAsync();
+
+                // Construct notification message
+                var message = $"{companyName} accepted the service for {eventDetails.Name}";
+
+                // Notify client
+                await _notificationService.CreateIndividualNotification(message, eventDetails.ClientId);
 
                 return true;
             }
@@ -503,6 +581,27 @@ namespace eventify_backend.Services
                 eventSorToApprove.IsApprove = !eventSorToApprove.IsApprove;    // Toggle the approval status
 
                 await _appDbContext.SaveChangesAsync();
+
+                //notification
+
+                // Fetch event details
+                var eventDetails = await _appDbContext.Events.FirstOrDefaultAsync(e => e.EventId == eventId);
+                if (eventDetails == null)
+                {
+                    throw new Exception($"Event not found with EventId: {eventId}");
+                }
+
+                // Fetch company name
+                var companyName = await _appDbContext.ServiceAndResources
+                    .Where(v => v.SoRId == soRId)
+                    .Select(v => v.Vendor!.CompanyName)
+                    .FirstOrDefaultAsync();
+
+                // Construct notification message
+                var message = $"{companyName} rejected the service for {eventDetails.Name}";
+
+                // Notify client
+                await _notificationService.CreateIndividualNotification(message, eventDetails.ClientId);
 
                 return true;
             }
@@ -699,6 +798,9 @@ namespace eventify_backend.Services
 
                 // Similar handling for other entities
                 await _appDbContext.SaveChangesAsync();
+
+                await _notificationService.CreateNotificationAsync(service.SoRId, vendorId,"service");
+
             }
             catch (ArgumentNullException)
             {

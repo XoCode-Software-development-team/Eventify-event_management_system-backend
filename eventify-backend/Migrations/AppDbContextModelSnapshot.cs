@@ -43,7 +43,7 @@ namespace eventifybackend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("ClientId")
+                    b.Property<Guid>("ClientId")
                         .HasColumnType("char(36)");
 
                     b.Property<string>("Description")
@@ -532,7 +532,9 @@ namespace eventifybackend.Migrations
                 {
                     b.HasOne("eventify_backend.Models.Client", "Client")
                         .WithMany("Events")
-                        .HasForeignKey("ClientId");
+                        .HasForeignKey("ClientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Client");
                 });

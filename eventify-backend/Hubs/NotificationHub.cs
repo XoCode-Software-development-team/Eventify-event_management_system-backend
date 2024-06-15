@@ -1,81 +1,49 @@
-﻿using eventify_backend.Services;
-using Microsoft.AspNetCore.SignalR;
-using System;
-using System.Collections.Concurrent;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.SignalR;
 
-namespace eventify_backend.Hubs
+public class NotificationHub : Hub
 {
-    public class NotificationHub : Hub
+    private readonly NotificationService _notificationService;
+    private readonly UserConnectionManager _userConnectionManager;
+
+    public NotificationHub(NotificationService notificationService, UserConnectionManager userConnectionManager)
     {
-        private readonly NotificationService _notificationService;
-        private static ConcurrentDictionary<Guid, string> userConnectionMap = new ConcurrentDictionary<Guid, string>();
+        _notificationService = notificationService;
+        _userConnectionManager = userConnectionManager;
+    }
 
-        public NotificationHub(NotificationService notificationService)
+    public override async Task OnConnectedAsync()
+    {
+        var userIdString = Context.GetHttpContext()?.Request.Query["userId"];
+        if (Guid.TryParse(userIdString, out Guid userId))
         {
-            _notificationService = notificationService;
+            _userConnectionManager.AddConnection(userId, Context.ConnectionId);
+            await SendNotificationCount(userId); // Send unread count on connection
         }
+        await base.OnConnectedAsync();
+    }
 
-        public override async Task OnConnectedAsync()
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        _userConnectionManager.RemoveConnection(Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task SendNotificationCount(Guid userId)
+    {
+        int unreadCount = await _notificationService.GetUnreadNotificationCount(userId);
+        var connectionId = _userConnectionManager.GetConnectionId(userId);
+        if (connectionId != null)
         {
-            // The user ID should be sent as a query string parameter when connecting
-            var userIdString = Context.GetHttpContext()?.Request.Query["userId"];
-            if (Guid.TryParse(userIdString, out Guid userId))
-            {
-                userConnectionMap[userId] = Context.ConnectionId;
-            }
-            await base.OnConnectedAsync();
+            await Clients.Client(connectionId).SendAsync("ReceiveNotificationCount", unreadCount);
         }
+    }
 
-        public override async Task OnDisconnectedAsync(Exception? exception)
+    public async Task SendNotification(Guid userId, string message)
+    {
+        var connectionId = _userConnectionManager.GetConnectionId(userId);
+        if (connectionId != null)
         {
-            var userId = GetUserIdFromConnectionId(Context.ConnectionId);
-            if (userId != null)
-            {
-                userConnectionMap.TryRemove((Guid)userId, out _);
-            }
-            await base.OnDisconnectedAsync(exception);
-        }
-
-        public Guid? GetUserIdFromConnectionId(string connectionId)
-        {
-            foreach (var kvp in userConnectionMap)
-            {
-                if (kvp.Value == connectionId)
-                {
-                    return kvp.Key;
-                }
-            }
-            return null;
-        }
-
-        public string? GetConnectionIdFromUserId (Guid userId)
-        {
-            foreach (var kvp in userConnectionMap)
-            {
-                if (kvp.Key == userId)
-                {
-                    return kvp.Value;
-                }
-            }
-            return null;
-        }
-
-        public async Task SendNotificationCount(Guid userId)
-        {
-            int unreadCount = await _notificationService.GetUnreadNotificationCount(userId);
-            if (userConnectionMap.TryGetValue(userId, out string? connectionId))
-            {
-                await Clients.Client(connectionId).SendAsync("ReceiveNotificationCount", unreadCount);
-            }
-        }
-
-        public async Task SendNotification(Guid userId, string message)
-        {
-            if (userConnectionMap.TryGetValue(userId, out string? connectionId))
-            {
-                await Clients.Client(connectionId).SendAsync("ReceiveNotification", message);
-            }
+            await Clients.Client(connectionId).SendAsync("ReceiveNotification", message);
         }
     }
 }

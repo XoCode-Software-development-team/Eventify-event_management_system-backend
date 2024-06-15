@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("eventify-backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+824d655b27da6126136aeb76395e4cbb44b2c91c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03086e029b2967da578a3142f672d9589dbfb12a")]
 [assembly: System.Reflection.AssemblyProductAttribute("eventify-backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("eventify-backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

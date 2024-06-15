@@ -3,6 +3,7 @@ using eventify_backend.DTOs;
 using eventify_backend.Models;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
+using System.Globalization;
 using System.Text.Json;
 
 namespace eventify_backend.Services
@@ -10,11 +11,12 @@ namespace eventify_backend.Services
     public class ResourceService
     {
         private readonly AppDbContext _appDbContext;
+        private readonly NotificationService _notificationService;
 
-        public ResourceService(AppDbContext appDbContext)
+        public ResourceService(AppDbContext appDbContext, NotificationService notificationService)
         {
             this._appDbContext = appDbContext;
-
+            _notificationService = notificationService;
         }
 
         public async Task<List<ResourceCategoryDTO>> GetAllResourceCategories()
@@ -72,7 +74,7 @@ namespace eventify_backend.Services
         {
             try
             {
-                var resource = await _appDbContext.ServiceAndResources.FindAsync(SORId);  // Find the resource by ID
+                var resource = await _appDbContext.ServiceAndResources.FindAsync(SORId);
 
                 if (resource == null)
                     return null;
@@ -80,8 +82,14 @@ namespace eventify_backend.Services
                 resource.IsSuspend = !resource.IsSuspend; // Toggle the suspend state
                 await _appDbContext.SaveChangesAsync();
 
+                string resourceName = resource?.Name ?? "resource"; // Use a default name if resource is null
+                string suspensionState = resource!.IsSuspend ? "suspended" : "unsuspended";
+                var message = $"{resourceName} is {suspensionState}";
 
-                // Get the category ID of the service
+                var userId = resource.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
+
                 var categoryId = await _appDbContext.Resources
                     .Where(s => s.SoRId == resource.SoRId)
                     .Select(s => s.ResourceCategoryId)
@@ -89,13 +97,13 @@ namespace eventify_backend.Services
 
                 return categoryId;
             }
-
             catch (Exception ex)
             {
                 // Log the exception or handle it accordingly
                 throw new Exception("An error occurred.", ex);
             }
         }
+
 
         public async Task<int?> DeleteResourceAsync(int Id)
         {
@@ -123,6 +131,13 @@ namespace eventify_backend.Services
                 _appDbContext.Resources.Remove(resource);               // Remove the resource from the database
 
                 await _appDbContext.SaveChangesAsync();
+
+                string resourceName = resource?.Name ?? "resource"; // Use a default name if resource is null
+                var message = $"{resourceName} is deleted by administrator";
+
+                var userId = resource!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
 
                 return deletedCategoryId; // return category id of deleted resource
             }
@@ -191,6 +206,18 @@ namespace eventify_backend.Services
                 resource.IsRequestToDelete = false; // Mark the resource as no longer needing deletion
                 await _appDbContext.SaveChangesAsync(); // Save changes to the database
 
+
+
+                //notification
+
+                string resourceName = resource?.Name ?? "Resource";
+                var message = $"{resourceName} delete request rejected by administrator";
+
+                var userId = resource!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
+
+
                 // Calculate the remaining count of resources still requesting deletion
                 var remainingCount = await _appDbContext.Resources.CountAsync(s => s.ResourceCategoryId == resource.ResourceCategoryId && s.IsRequestToDelete);
 
@@ -229,6 +256,16 @@ namespace eventify_backend.Services
                 var deletedCategory = resource.ResourceCategoryId; // Save the category ID before deletion
                 _appDbContext.Resources.Remove(resource); // Remove the resource from the database
                 await _appDbContext.SaveChangesAsync(); // Save changes to the database
+
+
+                //notification
+
+                string resourceName = resource?.Name ?? "resource";
+                var message = $"{resourceName} delete request approved by administrator";
+
+                var userId = resource!.VendorId;
+
+                await _notificationService.CreateIndividualNotification(message, userId);
 
                 // Calculate the remaining count of resources still requesting deletion
                 var remainingCount = await _appDbContext.Resources.CountAsync(s => s.ResourceCategoryId == deletedCategory && s.IsRequestToDelete);
@@ -308,7 +345,25 @@ namespace eventify_backend.Services
 
                 await _appDbContext.SaveChangesAsync();
 
-                return resource.ResourceCategoryId;
+                //notification
+
+                if (resource.IsRequestToDelete)
+                {
+                    string resourceName = resource?.Name ?? "resource";
+                    // Correct LINQ query to fetch the company name based on SORId
+                    var companyName = await _appDbContext.Vendors
+                        .Where(v => v.ServiceAndResources!.Any(s => s.SoRId == SORId))
+                        .Select(v => v.CompanyName)
+                        .FirstOrDefaultAsync();
+
+                    var message = $"{resourceName} request to delete by {companyName}";
+
+                    var adminId = await _appDbContext.Users.Where(u => u.Role=="Admin").Select(u => u.UserId).FirstOrDefaultAsync();
+
+                    await _notificationService.CreateIndividualNotification(message, adminId);
+                }
+
+                return resource!.ResourceCategoryId;
             }
             catch (Exception ex)
             {
@@ -462,6 +517,27 @@ namespace eventify_backend.Services
                 //_appDbContext.EventSoRApproves.Remove(eventSorToApprove);
                 await _appDbContext.SaveChangesAsync();
 
+                //notification
+
+                // Fetch event details
+                var eventDetails = await _appDbContext.Events.FirstOrDefaultAsync(e => e.EventId == eventId);
+                if (eventDetails == null)
+                {
+                    throw new Exception($"Event not found with EventId: {eventId}");
+                }
+
+                // Fetch company name
+                var companyName = await _appDbContext.ServiceAndResources
+                    .Where(v => v.SoRId == soRId)
+                    .Select(v => v.Vendor!.CompanyName)
+                    .FirstOrDefaultAsync();
+
+                // Construct notification message
+                var message = $"{companyName} accepted the resource for {eventDetails.Name}";
+
+                // Notify client
+                await _notificationService.CreateIndividualNotification(message, eventDetails.ClientId);
+
                 return true;
             }
             catch (Exception ex)
@@ -484,6 +560,27 @@ namespace eventify_backend.Services
                 eventSorToApprove.IsApprove = !eventSorToApprove.IsApprove;    // Toggle the approval status
 
                 await _appDbContext.SaveChangesAsync();
+
+                //notification
+
+                // Fetch event details
+                var eventDetails = await _appDbContext.Events.FirstOrDefaultAsync(e => e.EventId == eventId);
+                if (eventDetails == null)
+                {
+                    throw new Exception($"Event not found with EventId: {eventId}");
+                }
+
+                // Fetch company name
+                var companyName = await _appDbContext.ServiceAndResources
+                    .Where(v => v.SoRId == soRId)
+                    .Select(v => v.Vendor!.CompanyName)
+                    .FirstOrDefaultAsync();
+
+                // Construct notification message
+                var message = $"{companyName} rejected the resource for {eventDetails.Name}";
+
+                // Notify client
+                await _notificationService.CreateIndividualNotification(message, eventDetails.ClientId);
 
                 return true;
             }
@@ -655,6 +752,8 @@ namespace eventify_backend.Services
 
                 // Similar handling for other entities
                 await _appDbContext.SaveChangesAsync();
+
+                await _notificationService.CreateNotificationAsync(resource.SoRId, vendorId,"resource");
             }
             catch (ArgumentNullException)
             {
@@ -1036,6 +1135,9 @@ namespace eventify_backend.Services
 
                 // Save changes to the database
                 await _appDbContext.SaveChangesAsync();
+
+                await _notificationService.AddUpdatedNotificationAsync(vendorId, soRId);
+
             }
             catch (ArgumentNullException)
             {

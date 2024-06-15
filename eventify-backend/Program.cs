@@ -1,5 +1,5 @@
 using eventify_backend.Data;
-using eventify_backend.Hubs;
+using eventify_backend.Models;
 using eventify_backend.Services;
 using eventify_backend.UtilityService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +21,7 @@ builder.Services.AddScoped<UserProfileService>();
 builder.Services.AddScoped<VendorFollowService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddSingleton<UserConnectionManager>();
 
 
 builder.Services.AddAuthentication(x =>
