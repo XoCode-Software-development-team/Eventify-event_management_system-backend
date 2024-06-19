@@ -36,7 +36,7 @@ namespace xocode_backend.Controllers
                 var userId = Guid.Parse(userIdClaim.Value);
 
                 var events = await _eventDbContext.Events
-                    .Where(e => e.ClientId == userId && e.EndDateTime > DateTime.Now)
+                    .Where(e => e.ClientId == userId && e.EndDateTime >= DateTime.Now)
                     .Select(e => new
                     {
                         EventId = e.EventId,
@@ -68,7 +68,7 @@ namespace xocode_backend.Controllers
                 var userId = Guid.Parse(userIdClaim.Value);
 
                 var events = await _eventDbContext.Events
-                    .Where(e => e.ClientId == userId && e.EndDateTime > DateTime.Now && e.EventId == eventId)
+                    .Where(e => e.ClientId == userId && e.EndDateTime >= DateTime.Now && e.EventId == eventId)
                     .Select(e => new
                     {
                         EventId = e.EventId,
@@ -274,7 +274,7 @@ namespace xocode_backend.Controllers
                 var userId = Guid.Parse(userIdClaim.Value);
 
                 var events = await _eventDbContext.Events
-                            .Where(e => e.ClientId == userId && e.EndDateTime > DateTime.Now)
+                            .Where(e => e.ClientId == userId && e.EndDateTime >= DateTime.Now)
                             .Select(e => new
                             {
                                 EventId = e.EventId,
