@@ -48,6 +48,11 @@ namespace eventify_backend.Data
 
         public DbSet<VendorFollow> VendorFollows { get; set; }
 
+        public DbSet<Agenda> Agenda { get; set; }
+        public DbSet<Checklist> Checklist { get; set; }
+        public DbSet<ChecklistTask> ChecklistTask { get; set; }
+        public DbSet<AgendaTask> AgendaTask { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<FeatureAndFacility>()

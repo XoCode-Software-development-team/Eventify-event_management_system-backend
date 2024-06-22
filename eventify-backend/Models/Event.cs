@@ -23,6 +23,9 @@ namespace eventify_backend.Models
         // Navigation property to represent the Client who created the event
         public Client? Client { get; set; }
 
+        public Checklist? Checklist { get; set; }
+        public Agenda? Agenda { get; set; }
+
         public ICollection<EventSR>? EventSRs { get; set; }
 
         public ICollection<ReviewAndRating>? ReviewAndRating { get; set; }
