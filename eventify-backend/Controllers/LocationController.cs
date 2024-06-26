@@ -1,4 +1,5 @@
 ﻿using eventify_backend.Data;
+using eventify_backend.DTOs;
 using eventify_backend.Models;
 using eventify_backend.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -96,6 +97,53 @@ namespace eventify_backend.Controllers
                                 .Select(gl => new { gl.Latitude, gl.Longitude, gl.District })
                                 .ToList()
                 }); ;
+
+                return Ok(responseData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+        [HttpGet("{soRId}")]
+        public async Task<IActionResult> GetServiceResourceDetailsLocations([FromRoute] int soRId)
+        {
+            try
+            {
+                var item = await _appDbContext.ServiceAndResources
+                                   .Include(s => s.VendorSRLocations)
+                                   .Include(s => s.Vendor)
+                                   .FirstOrDefaultAsync(s => s.SoRId == soRId);
+
+                if (item == null)
+                {
+                    return NotFound("Service or Resource not found");
+                }
+
+                List<GeocodedLocationDTO> geocodedLocations;
+
+                if (item is Service)
+                {
+                    geocodedLocations = await _geoCodingService.GeocodeServicesAsync(new List<Service> { (Service)item });
+                }
+                else
+                {
+                    geocodedLocations = await _geoCodingService.GeocodeResourcesAsync(new List<Resource> { (Resource)item });
+                }
+
+                var responseData = new
+                {
+                    VendorName = item.Vendor?.CompanyName,
+                    soRid = item.SoRId,
+                    Name = item.Name,
+                    OverallRating = item.OverallRate,
+                    Locations = geocodedLocations
+                        .Where(gl => gl.SoRId == item.SoRId)
+                        .Select(gl => new { gl.Latitude, gl.Longitude, gl.District })
+                        .ToList()
+                };
 
                 return Ok(responseData);
             }
