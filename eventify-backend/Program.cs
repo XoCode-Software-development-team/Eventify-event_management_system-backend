@@ -22,6 +22,9 @@ builder.Services.AddScoped<VendorFollowService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton<UserConnectionManager>();
+builder.Services.AddScoped<GeocodingService>();
+builder.Services.AddHttpClient();
+
 
 
 builder.Services.AddAuthentication(x =>

@@ -13,4 +13,5 @@
         public float? Rating { get; set; }
         public bool IsSuspend { get; set; }
     }
+
 }

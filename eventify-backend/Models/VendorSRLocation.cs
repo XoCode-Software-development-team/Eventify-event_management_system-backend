@@ -25,4 +25,5 @@ namespace eventify_backend.Models
 
         public ServiceAndResource? ServiceAndResource { get; set; }
     }
+
 }
