@@ -8,8 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="Models\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Cloud.Dialogflow.V2" Version="4.20.0" />
   </ItemGroup>
 
 </Project>
