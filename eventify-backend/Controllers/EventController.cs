@@ -52,6 +52,39 @@ namespace xocode_backend.Controllers
         }
 
         [HttpGet]
+        [Route("GetPastEvent")]
+        [Authorize]
+
+        public async Task<IActionResult> GetPastEvent()
+        {
+            try
+            {
+                // Extract userId from the JWT token
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "User ID is missing in the token." });
+                }
+
+                var userId = Guid.Parse(userIdClaim.Value);
+
+                var events = await _eventDbContext.Events
+                    .Where(e => e.ClientId == userId && e.EndDateTime < DateTime.Now)
+                    .Select(e => new
+                    {
+                        EventId = e.EventId,
+                        Name = e.Name,
+                    }).ToListAsync();
+
+                return Ok(events);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
+
+        [HttpGet]
         [Route("GetEvent/{eventId}")]
         [Authorize]
         public async Task<IActionResult> GetEventById(int eventId)
@@ -68,7 +101,7 @@ namespace xocode_backend.Controllers
                 var userId = Guid.Parse(userIdClaim.Value);
 
                 var events = await _eventDbContext.Events
-                    .Where(e => e.ClientId == userId && e.EndDateTime >= DateTime.Now && e.EventId == eventId)
+                    .Where(e => e.ClientId == userId && e.EventId == eventId)
                     .Select(e => new
                     {
                         EventId = e.EventId,

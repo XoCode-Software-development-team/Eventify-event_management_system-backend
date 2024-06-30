@@ -104,7 +104,7 @@ namespace eventify_backend.Data
                 .HasForeignKey(e => e.SORId);
 
             modelBuilder.Entity<ReviewAndRating>()
-                .HasKey(rr => new { rr.EventId, rr.SoRId });
+                .HasKey(rr => new { rr.EventId, rr.SoRId,rr.TimeSpan });
 
             modelBuilder.Entity<EventSoRApprove>()
               .HasKey(e => new { e.EventId, e.SoRId });

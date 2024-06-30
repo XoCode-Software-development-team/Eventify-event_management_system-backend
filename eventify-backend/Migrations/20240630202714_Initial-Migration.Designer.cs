@@ -11,8 +11,8 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240622124048_Add checklist models")]
-    partial class Addchecklistmodels
+    [Migration("20240630202714_Initial-Migration")]
+    partial class InitialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -335,10 +335,16 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
                 {
                     b.Property<int>("EventId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
 
                     b.Property<int>("SoRId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime>("TimeSpan")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnOrder(2);
 
                     b.Property<string>("Comment")
                         .HasColumnType("longtext");
@@ -346,10 +352,7 @@ namespace eventifybackend.Migrations
                     b.Property<float>("Ratings")
                         .HasColumnType("float");
 
-                    b.Property<DateTime>("TimeSpan")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("EventId", "SoRId");
+                    b.HasKey("EventId", "SoRId", "TimeSpan");
 
                     b.HasIndex("SoRId");
 

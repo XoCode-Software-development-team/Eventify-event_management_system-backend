@@ -332,10 +332,16 @@ namespace eventifybackend.Migrations
             modelBuilder.Entity("eventify_backend.Models.ReviewAndRating", b =>
                 {
                     b.Property<int>("EventId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
 
                     b.Property<int>("SoRId")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime>("TimeSpan")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnOrder(2);
 
                     b.Property<string>("Comment")
                         .HasColumnType("longtext");
@@ -343,10 +349,7 @@ namespace eventifybackend.Migrations
                     b.Property<float>("Ratings")
                         .HasColumnType("float");
 
-                    b.Property<DateTime>("TimeSpan")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("EventId", "SoRId");
+                    b.HasKey("EventId", "SoRId", "TimeSpan");
 
                     b.HasIndex("SoRId");
 
