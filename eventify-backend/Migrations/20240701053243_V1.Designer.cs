@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using eventify_backend.Data;
 
@@ -10,9 +11,11 @@ using eventify_backend.Data;
 namespace eventifybackend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240701053243_V1")]
+    partial class V1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -623,8 +626,8 @@ namespace eventifybackend.Migrations
                     b.Property<string>("ContactPersonName")
                         .HasColumnType("longtext");
 
-                    b.Property<float?>("rate")
-                        .HasColumnType("float");
+                    b.Property<int?>("rate")
+                        .HasColumnType("int");
 
                     b.HasDiscriminator().HasValue("Vendor");
                 });
