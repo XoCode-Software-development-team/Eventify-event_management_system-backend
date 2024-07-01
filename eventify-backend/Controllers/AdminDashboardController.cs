@@ -49,7 +49,7 @@ namespace eventify_backend.Controllers
             {
                 await UpdateAllVendorsAverageRating();
 
-                var vendors = await _appDbContext.Vendors.Select(c => new { c.CompanyName, c.rate, c.Email }).ToListAsync();
+                var vendors = await _appDbContext.Vendors.Select(c => new { c.CompanyName, c.Rate, c.Email }).ToListAsync();
 
                 if (vendors == null || !vendors.Any())
                 {
@@ -78,11 +78,11 @@ namespace eventify_backend.Controllers
                     if (vendor.ServiceAndResources != null && vendor.ServiceAndResources.Count > 0)
                     {
                         float averageRating = vendor.ServiceAndResources.Average(s => s.OverallRate) ?? 0.0f;
-                        vendor.rate = (float)Math.Round(averageRating, 1);
+                        vendor.Rate = (float)Math.Round(averageRating, 1);
                     }
                     else
                     {
-                        vendor.rate = 0;
+                        vendor.Rate = 0;
                     }
 
                     _appDbContext.Vendors.Update(vendor);

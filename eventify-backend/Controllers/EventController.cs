@@ -4,6 +4,7 @@ using eventify_backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Utilities;
 
 namespace xocode_backend.Controllers
 {
@@ -12,10 +13,12 @@ namespace xocode_backend.Controllers
     public class EventController : ControllerBase
     {
         private readonly AppDbContext _eventDbContext;
+        private readonly NotificationService _notificationService;
 
-        public EventController(AppDbContext eventDbContext)
+        public EventController(AppDbContext eventDbContext, NotificationService notificationService)
         {
             _eventDbContext = eventDbContext;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
@@ -312,8 +315,8 @@ namespace xocode_backend.Controllers
                             {
                                 EventId = e.EventId,
                                 Name = e.Name,
-                                IsInVendorSr = _eventDbContext.EventSr.Any(v => v.SORId == soRId && v.Id==e.EventId),
-                                IsPending = _eventDbContext.EventSoRApproves.Any(es => es.SoRId == soRId && es.EventId==e.EventId && es.IsApprove == false)
+                                IsInVendorSr = _eventDbContext.EventSr.Any(v => v.SORId == soRId && v.Id == e.EventId),
+                                IsPending = _eventDbContext.EventSoRApproves.Any(es => es.SoRId == soRId && es.EventId == e.EventId && es.IsApprove == false)
                             }).ToListAsync();
 
                 return Ok(events);
@@ -340,6 +343,15 @@ namespace xocode_backend.Controllers
 
                 var userId = Guid.Parse(userIdClaim.Value);
 
+                var service = await _eventDbContext.ServiceAndResources.FirstOrDefaultAsync(s => s.SoRId == soRId);
+
+                var user = await _eventDbContext.Clients.FirstOrDefaultAsync(u => u.UserId == userId);
+
+                if (service == null || user == null)
+                {
+                    return BadRequest(new { Message = "Service or User not found" });
+                }
+
                 if (eventSoR == null || (eventSoR.Added?.Length == 0 && eventSoR.Removed?.Length == 0))
                 {
                     return BadRequest(new { Message = "Invalid request data." });
@@ -358,9 +370,23 @@ namespace xocode_backend.Controllers
                         };
 
                         _eventDbContext.EventSoRApproves.Add(eventSoRApprove);
+
+
+                        // Retrieve event details
+                        var eventDetails = await _eventDbContext.Events
+                            .FirstOrDefaultAsync(e => e.EventId == itemId);
+
+                        if (eventDetails != null)
+                        {
+
+                            var message = $"{service.Name} {(service is Service ? "service" : "resource")} is added to {eventDetails.Name} event by {user.FirstName}.";
+                            await _notificationService.CreateIndividualNotification(message, service.VendorId);
+
+                        }
                     }
 
                     await _eventDbContext.SaveChangesAsync();
+
                 }
 
                 if (eventSoR.Removed?.Length > 0)
@@ -371,7 +397,20 @@ namespace xocode_backend.Controllers
 
                         if (eventSrApp != null)
                         {
-                            _eventDbContext.EventSoRApproves.Remove(eventSrApp);
+                            eventSrApp.IsApprove = false;
+                            _eventDbContext.EventSoRApproves.Update(eventSrApp);
+                        }
+
+                        // Retrieve event details
+                        var eventDetails = await _eventDbContext.Events
+                            .FirstOrDefaultAsync(e => e.EventId == itemId);
+
+                        if (eventDetails != null)
+                        {
+
+                            var message = $"{service.Name} {(service is Service ? "service" : "resource")} is removed from {eventDetails.Name} event by {user.FirstName}.";
+                            await _notificationService.CreateIndividualNotification(message, service.VendorId);
+
                         }
                     }
 
@@ -385,6 +424,75 @@ namespace xocode_backend.Controllers
                 return StatusCode(500, new { Message = $"{ex.Message}" });
             }
         }
+
+
+        [HttpGet("checkEvent/{soRId}/{eventId}")]
+        [Authorize]
+        public async Task<IActionResult> CheckForEvents([FromRoute] int soRId, [FromRoute] int eventId)
+        {
+            try
+            {
+                // Extract userId from the JWT token
+                var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
+                if (userIdClaim == null)
+                {
+                    return Unauthorized(new { Message = "User ID is missing in the token." });
+                }
+
+                var userId = Guid.Parse(userIdClaim.Value);
+
+                // Fetch the event with the given eventId
+                var currentEvent = await _eventDbContext.Events
+                    .Include(e => e.EventSoRApproves)
+                    .Include(e => e.EventSRs)
+                    .FirstOrDefaultAsync(e => e.EventId == eventId);
+
+                if (currentEvent == null)
+                {
+                    return Ok(new { Message = "No event found for the given eventId" });
+                }
+
+                // Fetch other events associated with the given SoRId
+                var otherEvents = await _eventDbContext.Events
+                    .Include(e => e.EventSoRApproves)
+                    .Include(e => e.EventSRs)
+                    .Where(e => (e.EventSoRApproves!.Any(esr => esr.SoRId == soRId) || e.EventSRs!.Any(e => e.SORId == soRId)) && e.EventId != eventId)
+                    .ToListAsync();
+
+                var overlappingEventNames = new HashSet<string>();
+
+                // Check for overlapping events or events on the same date
+                foreach (var otherEvent in otherEvents)
+                {
+                    if (currentEvent.StartDateTime <= otherEvent.EndDateTime && currentEvent.EndDateTime >= otherEvent.StartDateTime)
+                    {
+                        overlappingEventNames.Add(otherEvent.Name!);
+                    }
+                }
+
+                // Send notification if overlaps or same date events are found
+                if (overlappingEventNames.Any())
+                {
+                    var message = $"{currentEvent.Name} overlaps with {string.Join(", ", overlappingEventNames)} on the same date.";
+                    await _notificationService.CreateIndividualNotification(message, userId);
+                    return Ok(new { Message = "Overlapping or same date events found", Details = message });
+                }
+
+                return Ok(new { Message = "No overlapping or same date events found" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+
+
+
+
+
+
+
 
 
     }
