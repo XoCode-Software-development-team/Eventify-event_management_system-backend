@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj": {}
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj": {}
   },
   "projects": {
-    "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj": {
+    "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj",
+        "projectUniqueName": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj",
         "projectName": "eventify-backend",
-        "projectPath": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\eventify-backend.csproj",
+        "projectPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\eventify-backend.csproj",
         "packagesPath": "C:\\Users\\manoj\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\manoj\\Desktop\\New folder\\eventify-backend\\obj\\",
+        "outputPath": "C:\\Users\\manoj\\Desktop\\Task\\On\\Eventify-event_management_system-backend\\eventify-backend\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\manoj\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -39,6 +39,42 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Microsoft.AspNetCore.SignalR": {
+              "target": "Package",
+              "version": "[1.1.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[7.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "NETCore.MailKit": {
+              "target": "Package",
+              "version": "[2.1.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "Pomelo.EntityFrameworkCore.MySql": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.6.2, )"
+            }
+          },
           "imports": [
             "net461",
             "net462",
